@@ -2,6 +2,7 @@ package com.example.learn_spring_framework.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.learn_spring_framework.model.Student;
@@ -20,6 +21,7 @@ public class StudentService {
 	 */
 	private final iStudentWriteable writer;
 	
+	@Autowired
 	public StudentService(iStudentReadable reader, iStudentWriteable writer){
 		this.reader = reader;
 		this.writer = writer;

@@ -2,7 +2,6 @@ package com.example.learn_spring_framework;
 
 import java.util.Scanner;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,8 +12,34 @@ import com.example.learn_spring_framework.controller.StudentController;
 @SpringBootApplication
 public class LearnSpringFrameworkApplication implements CommandLineRunner {
 
-	@Autowired // Nhờ Spring lấy cái Controller đưa vào
-    private StudentController control;
+    private final StudentController control;
+
+    public LearnSpringFrameworkApplication(StudentController control) {
+    	this.control = control;
+    }
+    
+    /*context: khi chạy spring sẽ bắt đầu component scanning để tìm
+     * các annotation để cho vào container để quản lý, tìm thấy xong
+     * spring sẽ tự khởi tạo ra đối tượng. 
+     * 
+     * Scan xong, Spring sẽ nhìn vào các hàm tạo để biết
+     * Controller cần Service
+     * Service cần Readable & Writeable (Implement)
+     * 
+     * Rồi khởi tạo đối tượng và bắt đầu dùng DI
+     * 
+     * nó thấy @Controller từ class Controller thì
+     * trong StudentController thấy cần StudentService @Service
+     * xong nó tiếp tục đi tìm thì nó thấy @Service cần @Repository
+     * của class StudentImplement
+     * 
+     * tạo obj StudentImplement trước vì không phụ thuộc vào ai
+     * -> lấy obj StudentImplement inject vào Service
+     * -> lấy obj Service inject vào Controller
+     * 
+     * Các obj đc tạo sẽ được lưu trữ trong trong container ApplicationContext
+     * và được gọi là Beans, khi nào cần thì sẽ lấy ra.
+     */
 	
 	public static void main(String[] args) {
 		
