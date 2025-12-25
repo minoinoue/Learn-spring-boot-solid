@@ -26,13 +26,8 @@ public class StudentController {
 	
 	@Autowired
 	private StudentService service;
-//	private Scanner scanner;
-	
-//	public StudentController(StudentService service, Scanner scanner) {
-//		this.service = service;
-//		this.scanner = scanner;
-//	}
-	//Xử lý GET request đến /api/students
+
+	// http://localhost:8080/api/students
 	@GetMapping
 	public List<Student> showStudent() {
 		System.out.println("Danh sách sinh viên hiện tại: ");
@@ -44,19 +39,12 @@ public class StudentController {
 				System.out.println(s);
 			}
 		}
-		return dsach; //api buộc phải có return
+		return dsach; 
 	}
 	 
-    // Xử lý POST request đến /api/students/add_student
-	/*
-	 * Truyền giá trị Postman là dạng Json
-	 */
+    // http://localhost:8080/api/students/add_student
     @PostMapping("/add_student")
 	public void addStudent(@RequestBody Student student) {
-//		System.out.println("Nhập mã sinh viên mới: ");
-//		String newmsv = scanner.nextLine();
-//		System.out.println("Nhập tên sinh viên mới: ");
-//		String newname = scanner.nextLine();
 		try {
 			service.add(student.getId(), student.getFullName());
 			System.out.println("Thêm sinh viên mới thành công!");
@@ -65,12 +53,9 @@ public class StudentController {
 		}
 	}
 	
-    @PutMapping("/{id}")
+    //http://localhost:8080/api/students/1?name=...
+    @PutMapping("/{Id}")
 	public void modifyStudent(@PathVariable String Id, @RequestParam String name) {
-//		System.out.println("Nhập mã sinh viên cần sửa: ");
-//		String findmsv = scanner.nextLine();
-//		System.out.println("Nhập tên mới: ");
-//		String modname = scanner.nextLine();
 		try {
 			service.modify(Id, name);
 			System.out.println("Cập nhật sinh viên mới thành công");
@@ -80,14 +65,11 @@ public class StudentController {
 	}
 	
 	
-	// 5. API Tìm sinh viên: GET http://localhost:8080/api/students/1
-	// Xử lý GET request đến /api/users/{id}
-	@GetMapping("/{id}")
+	// http://localhost:8080/api/students/1
+	@GetMapping("/{Id}")
 	public void findStudent(@PathVariable String Id) {
-//		System.out.println("Nhập mã sinh viên cần tìm: ");
-//		String findmsv = scanner.nextLine();
 		try {
-			System.out.println("Tìm thấy sinh viên" + service.getById(Id));
+			System.out.println("Tìm thấy sinh viên! " + service.getById(Id));
 		} catch (RuntimeException e) {
 			System.out.println("Lỗi không tìm thấy sinh viên!" + e);
 		}

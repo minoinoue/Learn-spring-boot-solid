@@ -12,19 +12,14 @@ import com.example.learn_spring_framework.repository.IStudentWriteable;
 @Service
 public class StudentService {
 	
-	@Autowired
-	private IStudentReadable reader; 
-	/*
-	 * giữ tính kết nối giữa service và repository vì spring
-	 * tự inject dpdc vào obj
-	 * 
-	 */
-	private IStudentWriteable writer;
+	private final IStudentReadable reader; 
+	private final IStudentWriteable writer;
 	
-//	public StudentService(IStudentReadable reader, IStudentWriteable writer){
-//		this.reader = reader;
-//		this.writer = writer;
-//	}
+	@Autowired
+	public StudentService(IStudentReadable reader, IStudentWriteable writer){
+		this.reader = reader;
+		this.writer = writer;
+	}
 	
 	public List<Student> getAllStudent(){
 		return reader.findAllStudent();
