@@ -43,6 +43,7 @@ public class StudentController {
 	}
 	 
     // http://localhost:8080/api/students/add_student
+	//Test postman POST body dạng Json {"id": "3", "fullName": "Phùng Tuấn Đạt"}
     @PostMapping("/add_student")
 	public void addStudent(@RequestBody Student student) {
 		try {
@@ -54,6 +55,7 @@ public class StudentController {
 	}
 	
     //http://localhost:8080/api/students/1?name=...
+	//Truyền param key là name còn value là tên mới của mình
     @PutMapping("/{Id}")
 	public void modifyStudent(@PathVariable String Id, @RequestParam String name) {
 		try {
