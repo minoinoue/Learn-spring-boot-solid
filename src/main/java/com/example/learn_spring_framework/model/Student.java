@@ -1,20 +1,20 @@
 package com.example.learn_spring_framework.model;
 
 public class Student {
-	String msv;
-	String fullName;
+	private String studentId;
+	private String fullName;
 	
-	public Student(String msv, String fullName) {
-		this.msv = msv;
+	public Student(String studentId, String fullName) {
+		this.studentId = studentId;
 		this.fullName = fullName;
 	}
 	
-	public String getMsv() {
-		return msv;
+	public String getId() {
+		return studentId;
 	}
 
-	public void setMsv(String msv) {
-		this.msv = msv;
+	public void setId(String studentId) {
+		this.studentId = studentId;
 	}
 
 	public String getFullName() {
@@ -27,7 +27,7 @@ public class Student {
 	
 	@Override
 	public String toString() {
-		return "Mã sinh viên: " + msv + " | Họ và tên sinh viên: " + fullName;
+		return "Mã sinh viên: " + studentId + " | Họ và tên sinh viên: " + fullName;
 	}
 
 	

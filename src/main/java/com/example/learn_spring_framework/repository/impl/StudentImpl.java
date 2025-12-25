@@ -3,18 +3,19 @@ package com.example.learn_spring_framework.repository.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.example.learn_spring_framework.repository.iStudentWriteable;
+import com.example.learn_spring_framework.repository.IStudentWriteable;
 import com.example.learn_spring_framework.model.Student;
-import com.example.learn_spring_framework.repository.iStudentReadable;
+import com.example.learn_spring_framework.repository.IStudentReadable;
 
 @Repository
-public class StudentImplement implements iStudentWriteable, iStudentReadable {
+public class StudentImpl implements IStudentWriteable, IStudentReadable {
 	
-	List<Student> students = new ArrayList<Student>();
+	private final List<Student> students = new ArrayList<Student>();
 	
-	public StudentImplement() {
+	public StudentImpl() {
 		students.add(new Student("1", "A"));
 		students.add(new Student("2", "B"));
 	}
@@ -25,9 +26,9 @@ public class StudentImplement implements iStudentWriteable, iStudentReadable {
 	}
 	
 	@Override
-	public Student findByMsv(String msv){
+	public Student findById(String studentId){
 		for (Student s : students) {
-			if(s.getMsv().equals(msv)) {
+			if(s.getId().equals(studentId)) {
 				return s;
 			} 
 		} 
@@ -40,8 +41,8 @@ public class StudentImplement implements iStudentWriteable, iStudentReadable {
 	}
 	
 	@Override
-	public void modify(String msv, String fullName) {
-		Student s = findByMsv(msv);
+	public void modify(String studentId, String fullName) {
+		Student s = findById(studentId);
 		if (s != null) {
 			s.setFullName(fullName);
 		}

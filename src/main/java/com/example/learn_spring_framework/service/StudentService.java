@@ -6,54 +6,55 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.learn_spring_framework.model.Student;
-import com.example.learn_spring_framework.repository.iStudentReadable;
-import com.example.learn_spring_framework.repository.iStudentWriteable;
+import com.example.learn_spring_framework.repository.IStudentReadable;
+import com.example.learn_spring_framework.repository.IStudentWriteable;
 
 @Service
 public class StudentService {
 	
-	private final iStudentReadable reader; 
+	@Autowired
+	private IStudentReadable reader; 
 	/*
 	 * giữ tính kết nối giữa service và repository vì spring
 	 * tự inject dpdc vào obj
 	 * 
-	 * chỉ được gán 1 lần trong hàm tạo
 	 */
-	private final iStudentWriteable writer;
+	private IStudentWriteable writer;
 	
-	@Autowired
-	public StudentService(iStudentReadable reader, iStudentWriteable writer){
-		this.reader = reader;
-		this.writer = writer;
-	}
+//	public StudentService(IStudentReadable reader, IStudentWriteable writer){
+//		this.reader = reader;
+//		this.writer = writer;
+//	}
 	
 	public List<Student> getAllStudent(){
 		return reader.findAllStudent();
 	}
 	
-	public Student getfindByMsv(String msv) {
-		if(msv == null || msv.trim().isEmpty()) 
+	public Student getById(String studentId) {
+		Student getStudent = reader.findById(studentId);
+		if(studentId == null || studentId.trim().isEmpty()) 
 			throw new IllegalArgumentException("Mã sinh viên không được rỗng");
-		if(reader.findByMsv(msv) == null)
-			throw new IllegalStateException("Không tìm thấy sinh viên với mã sinh viên " + msv);
-		return reader.findByMsv(msv);
+		if(getStudent == null)
+			throw new IllegalStateException("Không tìm thấy sinh viên với mã sinh viên " + studentId);
+		return getStudent;
 	}
 	
-	public void modify(String msv, String fullname) {
-		if(msv == null || msv.trim().isEmpty())
+	public void modify(String studentId, String fullName) {
+		if(studentId == null || studentId.trim().isEmpty())
 			throw new IllegalArgumentException("Mã sinh viên không được rỗng");
-		if(fullname == null || fullname.trim().isEmpty())
+		if(fullName == null || fullName.trim().isEmpty())
 			throw new IllegalArgumentException("Tên không được rỗng!");		
-		writer.modify(msv, fullname);
+		writer.modify(studentId, fullName);
 	}
 	
-	public void add(String msv, String fullname) {
-		if(msv == null || msv.trim().isEmpty())
+	public void add(String studentId, String fullName) {
+		Student getStudent = reader.findById(studentId);
+		if(studentId == null || studentId.trim().isEmpty())
 			throw new IllegalArgumentException("Mã sinh viên không được rỗng");
-		if(fullname == null || fullname.trim().isEmpty())
+		if(fullName == null || fullName.trim().isEmpty())
 			throw new IllegalArgumentException("Tên không được rỗng!");
-		if(reader.findByMsv(msv) != null)
+		if(getStudent != null)
 			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
-		writer.add(new Student(msv, fullname));
+		writer.add(new Student(studentId, fullName));
 	}
 }
