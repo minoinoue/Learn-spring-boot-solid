@@ -7,27 +7,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.example.learn_spring_framework.repository.IStudentWriteable;
+import com.example.learn_spring_framework.repository.StudentRepository;
+import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.repository.IStudentReadable;
 
 @Repository
 public class StudentImpl implements IStudentWriteable, IStudentReadable {
 	
-	private final List<Student> students = new ArrayList<Student>();
-	
-	public StudentImpl() {
-		students.add(new Student("1", "A"));
-		students.add(new Student("2", "B"));
-	}
+	@Autowired
+	private StudentRepository repository;
 	
 	@Override
 	public List<Student> findAllStudent(){
-		return students;
+		return repository.findAll();
 	}
 	
 	@Override
 	public Student findById(String studentId){
-		for (Student s : students) {
+		for (Student s : repository.findAll()) {
 			if(s.getId().equals(studentId)) {
 				return s;
 			} 
@@ -37,7 +35,7 @@ public class StudentImpl implements IStudentWriteable, IStudentReadable {
 	
 	@Override
 	public void add(Student student) {
-		students.add(student);
+		repository.save(student);
 	}
 	
 	@Override
@@ -45,6 +43,7 @@ public class StudentImpl implements IStudentWriteable, IStudentReadable {
 		Student s = findById(studentId);
 		if (s != null) {
 			s.setFullName(fullName);
+			repository.save(s);
 		}
 	}
 }

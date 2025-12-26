@@ -1,8 +1,24 @@
 package com.example.learn_spring_framework.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "students") //Tên bảng
 public class Student {
-	private String studentId;
+	@Id
+	@Column(name = "student_id")
+	private String studentId; //Dùng để lưu xuống cột StudentID
+	
+	@Column(name = "full_name")
 	private String fullName;
+	
+	//Hibernate yêu cầu có contrucstor không tham số
+	public Student() {
+		
+	}
 	
 	public Student(String studentId, String fullName) {
 		this.studentId = studentId;

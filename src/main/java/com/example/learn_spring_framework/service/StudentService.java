@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.repository.IStudentReadable;
 import com.example.learn_spring_framework.repository.IStudentWriteable;
@@ -42,14 +43,15 @@ public class StudentService {
 		writer.modify(studentId, fullName);
 	}
 	
-	public void add(String studentId, String fullName) {
-		Student getStudent = reader.findById(studentId);
-		if(studentId == null || studentId.trim().isEmpty())
+	public void add(AddStudentRequest dtoStu) {
+		String newStudentId = dtoStu.getNewStudentId();
+		String newStudentName = dtoStu.getNewStudentName();
+		if(newStudentId == null || newStudentId.trim().isEmpty())
 			throw new IllegalArgumentException("Mã sinh viên không được rỗng");
-		if(fullName == null || fullName.trim().isEmpty())
+		if(newStudentName == null || newStudentName.trim().isEmpty())
 			throw new IllegalArgumentException("Tên không được rỗng!");
-		if(getStudent != null)
+		if(reader.findById(newStudentId) != null)
 			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
-		writer.add(new Student(studentId, fullName));
+		writer.add(new Student(newStudentId, newStudentName));
 	}
 }

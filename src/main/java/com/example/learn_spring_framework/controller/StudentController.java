@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.learn_spring_framework.config.ScannerConfig;
+import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.service.StudentService;
 
@@ -43,11 +44,10 @@ public class StudentController {
 	}
 	 
     // http://localhost:8080/api/students/add_student
-	//Test postman POST body dạng Json {"id": "3", "fullName": "Phùng Tuấn Đạt"}
     @PostMapping("/add_student")
-	public void addStudent(@RequestBody Student student) {
+	public void addStudent(@RequestBody AddStudentRequest dtoStu) {
 		try {
-			service.add(student.getId(), student.getFullName());
+			service.add(dtoStu);
 			System.out.println("Thêm sinh viên mới thành công!");
 		} catch (RuntimeException e) {
 			System.out.println("Lỗi không thêm được sinh viên!" + e);
@@ -55,7 +55,7 @@ public class StudentController {
 	}
 	
     //http://localhost:8080/api/students/1?name=...
-	//Truyền param key là name còn value là tên mới của mình
+  //Truyền param key là name còn value là tên mới của mình
     @PutMapping("/{Id}")
 	public void modifyStudent(@PathVariable String Id, @RequestParam String name) {
 		try {
