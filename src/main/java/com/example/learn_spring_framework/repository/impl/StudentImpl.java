@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.example.learn_spring_framework.repository.IStudentWriteable;
-import com.example.learn_spring_framework.repository.StudentRepository;
+import com.example.learn_spring_framework.repository.IStudentRepository;
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.repository.IStudentReadable;
@@ -16,7 +16,7 @@ import com.example.learn_spring_framework.repository.IStudentReadable;
 public class StudentImpl implements IStudentWriteable, IStudentReadable {
 	
 	@Autowired
-	private StudentRepository repository;
+	private IStudentRepository repository;
 	
 	@Override
 	public List<Student> findAllStudent(){
