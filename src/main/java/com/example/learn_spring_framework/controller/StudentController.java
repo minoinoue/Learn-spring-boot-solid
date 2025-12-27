@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.learn_spring_framework.config.ScannerConfig;
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
+import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.service.StudentService;
 
@@ -25,55 +27,53 @@ import com.example.learn_spring_framework.service.StudentService;
 @RequestMapping("/api/students") //URL chung cho controller
 public class StudentController {
 	
+	private final StudentService service;
+	
 	@Autowired
-	private StudentService service;
+	public StudentController(StudentService service) {
+		this.service = service;
+	}
 
 	// http://localhost:8080/api/students
 	@GetMapping
 	public List<Student> showStudent() {
-		System.out.println("Danh sách sinh viên hiện tại: ");
 		List<Student> dsach = service.getAllStudent();
-		if (dsach.isEmpty()) {
-			System.out.println("Danh sách hiện tại không có sinh viên nào!");
-		} else {
-			for(Student s : dsach) {
-				System.out.println(s);
-			}
-		}
 		return dsach; 
+	}
+	
+	// http://localhost:8080/api/students/1
+	@GetMapping("/{Id}")
+	public Student findStudent(@PathVariable String Id) {
+			Student findStudentById = service.getById(Id);
+			return findStudentById;
 	}
 	 
     // http://localhost:8080/api/students/add_student
     @PostMapping("/add_student")
-	public void addStudent(@RequestBody AddStudentRequest dtoStu) {
-		try {
+	public String addStudent(@RequestBody AddStudentRequest dtoStu) {
 			service.add(dtoStu);
-			System.out.println("Thêm sinh viên mới thành công!");
-		} catch (RuntimeException e) {
-			System.out.println("Lỗi không thêm được sinh viên!" + e);
-		}
+			return "Thêm sinh viên mới thành công!";
 	}
 	
-    //http://localhost:8080/api/students/1?name=...
+    //http://localhost:8080/api/students/1?newStudentName=...
   //Truyền param key là name còn value là tên mới của mình
     @PutMapping("/{Id}")
-	public void modifyStudent(@PathVariable String Id, @RequestParam String name) {
-		try {
-			service.modify(Id, name);
-			System.out.println("Cập nhật sinh viên mới thành công");
-		} catch (RuntimeException e) {
-			System.out.println("Lỗi không cập nhật được sinh viên! " + e);
-		}
+	public String modifyStudent(@PathVariable String Id, ModifyStudentRequest dtoMod) {
+			service.modify(Id, dtoMod);
+			return "Cập nhật sinh viên " + Id + " thành công";
 	}
-	
-	
-	// http://localhost:8080/api/students/1
-	@GetMapping("/{Id}")
-	public void findStudent(@PathVariable String Id) {
-		try {
-			System.out.println("Tìm thấy sinh viên! " + service.getById(Id));
-		} catch (RuntimeException e) {
-			System.out.println("Lỗi không tìm thấy sinh viên!" + e);
-		}
-	}
+    
+    //http://localhost:8080/api/students/1233 DELETE
+    @DeleteMapping("/{Id}")
+    public String deleteStudent(@PathVariable String Id) {
+    		service.delete(Id);
+    		return "Đã xóa sinh viên với id = " + Id + " thành công";
+    }
+    
+    //http://localhost:8080/api/students/ DELETE
+    @DeleteMapping
+    public String deleteAllStudent() {
+    		service.deleteAll();
+    		return "Đã xóa danh sách sinh viên thành công.";
+    }
 }
