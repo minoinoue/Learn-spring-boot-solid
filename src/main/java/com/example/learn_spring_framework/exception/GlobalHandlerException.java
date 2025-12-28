@@ -1,5 +1,6 @@
 package com.example.learn_spring_framework.exception;
 
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -10,6 +11,7 @@ import jakarta.persistence.NoResultException;
 
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.FieldError;
 
 @RestControllerAdvice //Nơi xử lý lỗi chung
 public class GlobalHandlerException {
@@ -19,11 +21,26 @@ public class GlobalHandlerException {
 	 * 
 	 * Có 2 loại throwable là error (trả về httprequest) và exception (runtimeexception và customexception) (trả về lỗi logic ở serivce)
 	 */
-	@ExceptionHandler(IllegalArgumentException.class) //Định nghĩa xem bắt loại lỗi nào
-	@ResponseStatus(HttpStatus.BAD_REQUEST) // Quy định mã HTTP trả về - code 400
-    public ErrorResponse handleBadRequest(IllegalArgumentException ex) {
-        return new ErrorResponse(400, LocalDateTime.now(), ex.getMessage());
-    }
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorResponse handValidationException(MethodArgumentNotValidException ex) {
+		//Lấy ra toàn bộ kết quả kiểm tra, chứa danh sách các lỗi Spring tìm thấy.
+		//Tránh lỗi NullPointerException (hàm if đầu tiên)
+		
+		/*Nếu ex.getBindingResult() trả về null, 
+		 * thì việc gọi .getFieldError() ngay sau đó sẽ gây NPE.
+		 * Khi đó biến error là null.
+		 * error.getDefaultMessage() chính là bảo cái null thực hiện hành động -> NPE
+		 */
+		String errorMessage = "Dữ liệu không hợp lệ";
+		if(ex.getBindingResult().hasErrors()) {
+			FieldError error = ex.getBindingResult().getFieldError(); //Lấy ra lỗi đầu tiên trong danh sách
+			if (error != null) {
+				errorMessage = error.getDefaultMessage(); //Lấy ra lỗi từ message trong DTO
+			}
+		}
+		return new ErrorResponse(400, LocalDateTime.now(), errorMessage);
+	}
 	
 	@ExceptionHandler(IllegalStateException.class)
 	@ResponseStatus(HttpStatus.CONFLICT)
@@ -42,6 +59,12 @@ public class GlobalHandlerException {
 	public ErrorResponse handleISError(Exception ex) {
 		return new ErrorResponse(500, LocalDateTime.now(), ex.getMessage());
 	}
+	
+//	@ExceptionHandler(IllegalArgumentException.class) //Định nghĩa xem bắt loại lỗi nào
+//	@ResponseStatus(HttpStatus.BAD_REQUEST) // Quy định mã HTTP trả về - code 400
+//    public ErrorResponse handleBadRequest(IllegalArgumentException ex) {
+//        return new ErrorResponse(400, LocalDateTime.now(), ex.getMessage());
+//    }
 }
 
 /*Flow thêm sinh viên mới hợp lệ {"newStudentId": "SV001", "newStudentName": "Tèo"}

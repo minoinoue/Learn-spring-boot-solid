@@ -13,7 +13,25 @@ import com.example.learn_spring_framework.repository.IStudentRepository;
 
 import jakarta.persistence.NoResultException;
 
-
+/*Bean Validation được dùng để check rỗng.
+ * Bean Validation (hay còn gọi là Jakarta Validation) là một tiêu chuẩn trong Java giúp bạn kiểm tra tính hợp lệ của dữ liệu 
+ * (validate) ngay từ khi nó bước vào ứng dụng, 
+ * thông qua các Annotation đơn giản thay vì viết hàng tá câu lệnh if-else lặp đi lặp lại.
+ * 
+ * Thay vì để service kiểm tra, DTO sẽ tự bảo vệ nó
+ * @Valid
+ * @NotNull
+ * @Size
+ * @Email
+ * @BindingResult
+ * 
+ * Các bước:
+ * - Thêm dependency starter validation
+ * - Dùng annotation valid ở dto
+ * - Gắn các annotation vào trước các @ResquestBody để check
+ * - Loại bỏ các if else check rỗng
+ * - Hứng lỗi validation MethodArgumentNotValidException
+ */
 @Service
 public class StudentService {
 	
@@ -26,27 +44,20 @@ public class StudentService {
 	
 	public List<Student> getAllStudent(){
 		List<Student> allStudent = repo.findAll();
-		if (allStudent.isEmpty())
-			throw new NoResultException("Danh sách hiện tại không có sinh viên nào!");
 		return allStudent;
 	}
 	
 	public Student getById(String studentId) {
 		Optional<Student> getStudent = repo.findById(studentId);
-		if(studentId == null || studentId.trim().isEmpty()) 
-			throw new IllegalArgumentException("Mã sinh viên không được rỗng");
 		if(getStudent.isEmpty())
 			throw new NoResultException("Không tìm thấy sinh viên " + studentId + " trong danh sách.");
 		return getStudent.get(); //get để mở hộp
 	}
 	
 	public void add(AddStudentRequest dtoStu) {
+		//Bỏ các if-else logic valid ra, chỉ còn chứa logic nghiệp vụ
 		String newStudentId = dtoStu.getNewStudentId();
 		String newStudentName = dtoStu.getNewStudentName();
-		if(newStudentId == null || newStudentId.trim().isEmpty())
-			throw new IllegalArgumentException("Mã sinh viên không được rỗng");
-		if(newStudentName == null || newStudentName.trim().isEmpty())
-			throw new IllegalArgumentException("Tên không được rỗng!");
 		if(repo.existsById(newStudentId))
 			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
 		repo.save(new Student(newStudentId, newStudentName));
@@ -54,10 +65,6 @@ public class StudentService {
 	
 	public void modify(String studentId, ModifyStudentRequest dtoMod) {
 		String newFullName = dtoMod.getNewStudentName();
-		if(studentId == null || studentId.trim().isEmpty())
-			throw new IllegalArgumentException("Mã sinh viên không được rỗng");
-		if(newFullName == null || newFullName.trim().isEmpty())
-			throw new IllegalArgumentException("Tên không được rỗng!");
 		Student existingStudent = getById(studentId);
 		existingStudent.setFullName(newFullName);
 		repo.save(existingStudent);
