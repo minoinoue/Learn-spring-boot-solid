@@ -5,19 +5,39 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Entity
-@Table(name = "students") //Tên bảng
+/*@Entity - Model class that maps with/ stored in a database
+ * 
+ * Purpose: Define a JPA entity
+ */
+@Entity 
+@Table(name = "students") //Name of table
 public class Student {
-	@Id
-	@Column(name = "student_id")
-	private String studentId; //Dùng để lưu xuống cột StudentID
+	@Id //Define primary key
+	@Column(name = "student_id") //Name of column of table
+	private String studentId; 
 	
 	@Column(name = "full_name")
 	private String fullName;
 	
-	//Hibernate yêu cầu có contrucstor không tham số
 	public Student() {
-		
+		/*Hibernate request constructor no arguments
+		 * 
+		 *	+ When ORM read data on database, it needs a constructor no arguments
+		 *to set fields one by one 
+		 *
+		 *	+ Ensure that every provider like Hibernate or EclispeLink all consistent
+		 *
+		 *	+ Hibernate usually create proxy to lazy loading or optimize queries 
+		 *and proxy can created class without arguments
+		 *
+		 * <Proxy is a subclass that's created by Hibernate while runtime to replace
+		 * real entity until Hibernate needs upload real data from database
+		 * 
+		 *How's work: When you get student, you don't have real <Student>,
+		 *Proxy just has ID so when you call getStudentID() or getFullName(),
+		 *Proxy will be actived and push sql select, then replace the data on
+		 *Proxy and return real entity.
+		 */
 	}
 	
 	public Student(String studentId, String fullName) {
@@ -25,11 +45,11 @@ public class Student {
 		this.fullName = fullName;
 	}
 	
-	public String getId() {
+	public String getStudentId() {
 		return studentId;
 	}
 
-	public void setId(String studentId) {
+	public void setStudentId(String studentId) {
 		this.studentId = studentId;
 	}
 

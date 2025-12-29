@@ -16,14 +16,44 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
+import com.example.learn_spring_framework.dto.response.StudentResponse;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.service.StudentService;
 
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 
-//ResquestBody dùng cho put hoặc post
-@RestController
-@RequestMapping("/api/students") //URL chung cho controller
+/*@RestController is used to define a controller that handles
+ * RESTful web servives (return data directly like JSON)
+ * 
+ * Combine with @Controller and @ResponseBody
+ * 
+ * Note: 
+ * - When one method in @RestController violates validation, it will throw
+ * exception and @RestControllerAdvice catches that exception and 
+ * return normalized response to client
+ *
+ * - When you return successful result without violate conditions,
+ * JSON will take variable in DTO to show or get value through Postman's body
+ * ex: http://localhost:8080/api/students/add_student
+ * {"newStudentId": "SV005", "newStudentName": "Trần Nhân Doanh"}
+ * 
+ * It will return
+ * {
+    "timestamp": "29/12/2025 11:27:39",
+    "status": 201,
+    "message": "Thêm sinh viên mới thành công!",
+    "data": {
+        "studentId": "SV005",
+        "fullName": "Trần Nhân Doanh"
+    }
+    
+ *  In input body, you must write name of variable as same as you write 
+ *  variable's name in DTO
+ */
+
+@RestController 
+@RequestMapping("/api/students") //default URL for controller
 public class StudentController {
 	
 	private final StudentService service;
@@ -42,7 +72,7 @@ public class StudentController {
 	
 	// http://localhost:8080/api/students/1 GET
 	@GetMapping("/{id}")
-	//Valid để kích hoạt validation, dùng cho các dto
+	//PathVariable is used to get variable from url
 	public Student findStudent(@PathVariable String id) {
 			Student findStudentById = service.getById(id);
 			return findStudentById;
@@ -50,15 +80,26 @@ public class StudentController {
 	
     // http://localhost:8080/api/students/add_student POST
     @PostMapping("/add_student")
-	public ResponseEntity<String> addStudent(@RequestBody @Valid AddStudentRequest dtoStu) {
-			service.add(dtoStu);
-			return ResponseEntity.status(HttpStatus.CREATED).body("Thêm sinh viên mới thành công!");
-			//Xử lý response trong Controller.
+    /*
+     * use @Valid to active the checking condition from DTO AddStudentRequest
+     * @RequestBody need a return a body type DTO AddStudentRequest (will be transform into JSON by Jackson)
+     */
+	public ResponseEntity<StudentResponse<Student>> addStudent(@RequestBody @Valid AddStudentRequest dtoStu) {
+    	/*ResponseEntity is represent for HTTP Response includes HTTP status code, body, HTTP headers
+    	 * <StudentResponse<Student>> in here is type of return (body)
+    	 * 
+    	 * Context: API return HTTP response include type of DTO (StudentResponse has Student type)
+    	 */
+    		Student newStudent = service.add(dtoStu);
+			
+			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 201, "Thêm sinh viên mới thành công!", newStudent);
+			//Create a DTO return result
+			return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
+			//Return HTTP status code and response body DTO to client
 	}
 	
     //http://localhost:8080/api/students/1 PUT
-    //Truyền body newStudentName JSON
-    //Truyền param key là name còn value là tên mới của mình
+    //@RequestBody need a return a body type DTO ModifyStudent so in the body you just only use newStudentName variable
     @PutMapping("/{id}")
 	public ResponseEntity<String> modifyStudent(@PathVariable String id, 
 												@RequestBody @Valid ModifyStudentRequest dtoMod) {
@@ -73,7 +114,7 @@ public class StudentController {
     		return ResponseEntity.status(HttpStatus.OK).body("Đã xóa sinh viên với id = " + id + " thành công");
     }
     
-    //http://localhost:8080/api/students/ DELETE
+    //http://localhost:8080/api/students/DELETE
     @DeleteMapping
     public ResponseEntity<String> deleteAllStudent() {
     		service.deleteAll();

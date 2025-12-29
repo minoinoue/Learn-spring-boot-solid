@@ -13,30 +13,27 @@ import com.example.learn_spring_framework.repository.IStudentRepository;
 
 import jakarta.persistence.NoResultException;
 
-/*Bean Validation được dùng để check rỗng.
- * Bean Validation (hay còn gọi là Jakarta Validation) là một tiêu chuẩn trong Java giúp bạn kiểm tra tính hợp lệ của dữ liệu 
- * (validate) ngay từ khi nó bước vào ứng dụng, 
- * thông qua các Annotation đơn giản thay vì viết hàng tá câu lệnh if-else lặp đi lặp lại.
- * 
- * Thay vì để service kiểm tra, DTO sẽ tự bảo vệ nó
- * @Valid
- * @NotNull
- * @Size
- * @Email
- * @BindingResult
- * 
- * Các bước:
- * - Thêm dependency starter validation
- * - Dùng annotation valid ở dto
- * - Gắn các annotation vào trước các @ResquestBody để check
- * - Loại bỏ các if else check rỗng
- * - Hứng lỗi validation MethodArgumentNotValidException
+/*@Service is use for classes that handle business logic code and throw 
+ * exceptions.
  */
 @Service
 public class StudentService {
 	
 	private final IStudentRepository repo;
 	
+	/* Autowired is annotation for dependency injection to connect beans
+	 * 
+	 * When you define beans, because bean was only be created by once so
+	 * when one class request a bean object, @Autowired will take an available
+	 * object to inject into method. 
+	 * 
+	 * Note: Bean A depends on Bean B -> Bean B will be created first.
+	 * 
+	 * Order: 
+	 * -> JpaRepo proxy (Spring Data created) 
+	 * -> Repository bean (proxy) 
+	 * -> Service -> Controller -> SpringApplicationApp.run
+	 */
 	@Autowired
 	public StudentService (IStudentRepository repo) {
 		this.repo = repo;
@@ -51,16 +48,17 @@ public class StudentService {
 		Optional<Student> getStudent = repo.findById(studentId);
 		if(getStudent.isEmpty())
 			throw new NoResultException("Không tìm thấy sinh viên " + studentId + " trong danh sách.");
-		return getStudent.get(); //get để mở hộp
+		return getStudent.get(); //get the object in Optional's box
 	}
 	
-	public void add(AddStudentRequest dtoStu) {
-		//Bỏ các if-else logic valid ra, chỉ còn chứa logic nghiệp vụ
+	public Student add(AddStudentRequest dtoStu) {
 		String newStudentId = dtoStu.getNewStudentId();
 		String newStudentName = dtoStu.getNewStudentName();
+		Student newStudent = new Student(newStudentId, newStudentName);
 		if(repo.existsById(newStudentId))
 			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
-		repo.save(new Student(newStudentId, newStudentName));
+		repo.save(newStudent);
+		return newStudent;
 	}
 	
 	public void modify(String studentId, ModifyStudentRequest dtoMod) {
