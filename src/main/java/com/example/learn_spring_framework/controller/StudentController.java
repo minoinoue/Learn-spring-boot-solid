@@ -136,7 +136,7 @@ public class StudentController {
     		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
     
-    //http://localhost:8080/api/students/DELETE
+    //http://localhost:8080/api/students/ DELETE
     @DeleteMapping
     public ResponseEntity<StudentResponse<Student>> deleteAllStudent() {
     		service.deleteAll();
