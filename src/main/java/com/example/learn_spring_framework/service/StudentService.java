@@ -61,11 +61,12 @@ public class StudentService {
 		return newStudent;
 	}
 	
-	public void modify(String studentId, ModifyStudentRequest dtoMod) {
+	public Student modify(String studentId, ModifyStudentRequest dtoMod) {
 		String newFullName = dtoMod.getNewStudentName();
 		Student existingStudent = getById(studentId);
 		existingStudent.setFullName(newFullName);
 		repo.save(existingStudent);
+		return existingStudent;
 	}
 	
 	public void delete(String studentId) {

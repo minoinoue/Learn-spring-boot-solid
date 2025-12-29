@@ -65,17 +65,28 @@ public class StudentController {
 
 	// http://localhost:8080/api/students GET
 	@GetMapping
-	public List<Student> showStudent() {
+	public ResponseEntity<StudentResponse<List<Student>>> showStudent() {
 		List<Student> dsach = service.getAllStudent();
-		return dsach; 
+		
+		StudentResponse<List<Student>> responseBody = new StudentResponse<List<Student>>(LocalDateTime.now(),
+																			200,
+																			null,
+																			dsach);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(responseBody); 
 	}
 	
 	// http://localhost:8080/api/students/1 GET
 	@GetMapping("/{id}")
 	//PathVariable is used to get variable from url
-	public Student findStudent(@PathVariable String id) {
+	public ResponseEntity<StudentResponse<Student>> findStudent(@PathVariable String id) {
 			Student findStudentById = service.getById(id);
-			return findStudentById;
+			
+			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(),
+																				200,
+																				"Đã tìm thấy sinh viên có " + id + " !",
+																				findStudentById);
+			return ResponseEntity.status(HttpStatus.OK).body(responseBody);
 	}
 	
     // http://localhost:8080/api/students/add_student POST
@@ -92,7 +103,9 @@ public class StudentController {
     	 */
     		Student newStudent = service.add(dtoStu);
 			
-			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 201, "Thêm sinh viên mới thành công!", newStudent);
+			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 
+																				201, 
+																				"Thêm sinh viên mới thành công!", newStudent);
 			//Create a DTO return result
 			return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
 			//Return HTTP status code and response body DTO to client
@@ -101,23 +114,36 @@ public class StudentController {
     //http://localhost:8080/api/students/1 PUT
     //@RequestBody need a return a body type DTO ModifyStudent so in the body you just only use newStudentName variable
     @PutMapping("/{id}")
-	public ResponseEntity<String> modifyStudent(@PathVariable String id, 
+	public ResponseEntity<StudentResponse<Student>> modifyStudent(@PathVariable String id, 
 												@RequestBody @Valid ModifyStudentRequest dtoMod) {
-			service.modify(id, dtoMod);
-			return ResponseEntity.status(HttpStatus.OK).body("Cập nhật sinh viên " + id + " thành công");
+			Student renameStudent = service.modify(id, dtoMod);
+			
+			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 
+																				200, 
+																				"Cập nhật sinh viên " + id + " thành công",
+																				renameStudent);
+			return ResponseEntity.status(HttpStatus.OK).body(responseBody);
 	}
     
     //http://localhost:8080/api/students/1 DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteStudent(@PathVariable String id) {
+    public ResponseEntity<StudentResponse<Student>> deleteStudent(@PathVariable String id) {
     		service.delete(id);
-    		return ResponseEntity.status(HttpStatus.OK).body("Đã xóa sinh viên với id = " + id + " thành công");
+    		
+    		StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 
+    																			200,	
+    																			"Đã xóa sinh viên với id = " + id + " thành công");
+    		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
     
     //http://localhost:8080/api/students/DELETE
     @DeleteMapping
-    public ResponseEntity<String> deleteAllStudent() {
+    public ResponseEntity<StudentResponse<Student>> deleteAllStudent() {
     		service.deleteAll();
-    		return ResponseEntity.status(HttpStatus.OK).body("Đã xóa danh sách sinh viên thành công");
+    		
+    		StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(),
+    																			200,
+    																			"Đã xóa toàn bộ danh sách sinh viên.");
+    		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
 }

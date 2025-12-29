@@ -3,7 +3,10 @@ package com.example.learn_spring_framework.dto.response;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+@JsonInclude(Include.NON_NULL) //Ignore all null fields (put before the class)
 public class StudentResponse<T> { //This class can hold every type of Object
 	
 	//format type of date time

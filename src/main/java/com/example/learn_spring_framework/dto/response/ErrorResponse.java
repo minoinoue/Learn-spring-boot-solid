@@ -3,9 +3,12 @@ package com.example.learn_spring_framework.dto.response;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class ErrorResponse {
 	
+	@JsonInclude(Include.NON_NULL) //Ignore all null fields
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
 	private LocalDateTime timestamp;
 	private int status; 
