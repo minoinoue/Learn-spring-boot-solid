@@ -14,7 +14,9 @@ public class StudentResponse<T> { //This class can hold every type of Object
 	private LocalDateTime timestamp;
 	private int status;
 	private String message;
-	private T data; 
+	private T data;
+	private String fullName;
+	private String studentId;
 	
 	/*T acts as a placeholder for the actual type
 	 *E for elements in collections
@@ -27,6 +29,15 @@ public class StudentResponse<T> { //This class can hold every type of Object
 		this.message = message;
 		this.status = status;
 	}
+	
+	public StudentResponse (LocalDateTime timestamp, int status, String message, String fullName, String studentId) {
+		this.timestamp = timestamp;
+		this.message = message;
+		this.status = status;
+		this.fullName = fullName;
+		this.studentId = studentId;
+	}
+	
 	
 	public StudentResponse (LocalDateTime timestamp, int status ,String message, T data) {
 		this.timestamp = timestamp;
@@ -65,5 +76,21 @@ public class StudentResponse<T> { //This class can hold every type of Object
 
 	public void setData(T data) {
 		this.data = data;
+	}
+
+	public String getFullName() {
+		return fullName;
+	}
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+
+	public String getStudentId() {
+		return studentId;
+	}
+
+	public void setStudentId(String studentId) {
+		this.studentId = studentId;
 	}
 }

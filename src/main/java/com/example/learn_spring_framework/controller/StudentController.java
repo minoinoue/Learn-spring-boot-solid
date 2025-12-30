@@ -1,6 +1,7 @@
 package com.example.learn_spring_framework.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
+import com.example.learn_spring_framework.dto.response.StudentItemResponse;
 import com.example.learn_spring_framework.dto.response.StudentResponse;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.service.StudentService;
@@ -65,13 +67,23 @@ public class StudentController {
 
 	// http://localhost:8080/api/students GET
 	@GetMapping
-	public ResponseEntity<StudentResponse<List<Student>>> showStudent() {
+	public ResponseEntity<StudentResponse<List<StudentItemResponse>>> showStudent() {
 		List<Student> dsach = service.getAllStudent();
+		/*
+		 * stream() is a flexible way to process collections of object like mapping, reducing, sorting
+		 * 
+		 * map method each object List<Student> sang List<StudentItemResponse>
+		 * 
+		 * collect(Collectors.toList()) returns result stream into List
+		 */
+		List<StudentItemResponse> dsachList =  dsach.stream()
+			.map(student -> new StudentItemResponse(student.getStudentId(), student.getFullName()))
+					.collect(Collectors.toList());
 		
-		StudentResponse<List<Student>> responseBody = new StudentResponse<List<Student>>(LocalDateTime.now(),
+		StudentResponse<List<StudentItemResponse>> responseBody = new StudentResponse<List<StudentItemResponse>>(LocalDateTime.now(),
 																			200,
 																			null,
-																			dsach);
+																			dsachList);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(responseBody); 
 	}
@@ -105,7 +117,8 @@ public class StudentController {
 			
 			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 
 																				201, 
-																				"Thêm sinh viên mới thành công!", newStudent);
+																				"Thêm sinh viên mới thành công!",
+																				newStudent);
 			//Create a DTO return result
 			return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
 			//Return HTTP status code and response body DTO to client
@@ -137,7 +150,7 @@ public class StudentController {
     }
     
     //http://localhost:8080/api/students/ DELETE
-    @DeleteMapping
+    @DeleteMapping("/delete_all")
     public ResponseEntity<StudentResponse<Student>> deleteAllStudent() {
     		service.deleteAll();
     		

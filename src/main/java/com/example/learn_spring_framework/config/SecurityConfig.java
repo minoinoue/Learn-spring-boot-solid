@@ -1,16 +1,20 @@
 package com.example.learn_spring_framework.config;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import com.example.learn_spring_framework.service.UserService;
+
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+
 
 /*Spring Security provide authentication and authorization and protection
  * 
@@ -23,6 +27,13 @@ import org.springframework.security.config.Customizer;
 @EnableWebSecurity
 public class SecurityConfig{
 	
+	private final PasswordEncoder bcrypt;
+	
+	@Autowired
+	public SecurityConfig(PasswordEncoder bcrypt) {
+		this.bcrypt = bcrypt;
+	}
+	
 	@Bean
 	/*
 	 * SecurityFilterChain object will be used for security of application
@@ -34,10 +45,12 @@ public class SecurityConfig{
 	 */
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
+		//  Disable CSRF to test postman
+        	.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests((requests) -> requests 
 					/*Start to configure AuthZ for HTTP requests
 					 */
-					.requestMatchers("/", "index").permitAll()
+					.requestMatchers("/api/students/add_student").permitAll()
 					/* Choose requests that send to main page (/) or (/index)
 					 * 
 					 * permitAll(): allow everyone
@@ -59,24 +72,24 @@ public class SecurityConfig{
 					 */
 			return http.build(); //return the configure object to Spring
 	}
-	
-	/*
-	 * Manage user data
+
+	/*Configure AuthenticationProvider
 	 * 
-	 * Purpose: This is an interface checks that user X is truly exist or not
-	 * If it truly has, so what are there user name, password or role?
+	 * Purpose: verifing user credentials during authenticaion process (maybe combine with LDAP, Oauth, SAML)
+	 * 
+	 * DaoAuthenticationProvider: 
+	 * JwtAuthenticationProvider
+	 * RememberMeAuthenticationProvider
+	 * LdapAuthenticationProvider
+	 * OpenIDAuthenticaitonProvider
+	 * 
 	 */
-	@Bean
-	public UserDetailsService userDetailsService() {
-		UserDetails user = User.withDefaultPasswordEncoder()
-				/*Create an user with default password to test
-				 * 
-				 */
-				.username("username")
-				.password("password")
-				.roles("USER") // -> this is AuthZ
-				.build(); // -> return UserDetails object
-		return new InMemoryUserDetailsManager(user);
-		//Create a management system that store in RAM
-	}
+    @Bean
+    public AuthenticationProvider authenticationProvider(UserService user) {
+    	//DAP This likes brain that combines UserDetailsService (find user) and PasswordEncoder (check pass)
+    	DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(user); // find user from service
+        provider.setPasswordEncoder(bcrypt);     // checking pass
+        return provider;
+    }
 }

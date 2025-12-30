@@ -1,8 +1,11 @@
 package com.example.learn_spring_framework.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 /*@Entity - Model class that maps with/ stored in a database
@@ -18,6 +21,11 @@ public class Student {
 	
 	@Column(name = "full_name")
 	private String fullName;
+	
+	@OneToOne(cascade = CascadeType.ALL) //When you save Student -> save User
+	@JoinColumn(name = "id", referencedColumnName = "id") //reference key in Student
+	//create column user_id in table students -> hold the "id" of the user that's student have
+	private User user;
 	
 	public Student() {
 		/*Hibernate request constructor no arguments
@@ -40,9 +48,10 @@ public class Student {
 		 */
 	}
 	
-	public Student(String studentId, String fullName) {
+	public Student(String studentId, String fullName, User user) {
 		this.studentId = studentId;
 		this.fullName = fullName;
+		this.user = user;
 	}
 	
 	public String getStudentId() {
@@ -61,9 +70,17 @@ public class Student {
 		this.fullName = fullName;
 	}
 	
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
 	@Override
 	public String toString() {
-		return "Mã sinh viên: " + studentId + " | Họ và tên sinh viên: " + fullName;
+		return "Mã sinh viên: " + studentId + " | Họ và tên sinh viên: " + fullName + " | Username: " + user.getUserName();
 	}
 
 	

@@ -36,7 +36,6 @@ public class ErrorResponse {
 		this.status = status;
 	}
 	
-	
 	public String getMessage() {
 		return message;
 	}
@@ -44,5 +43,4 @@ public class ErrorResponse {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-
 }

@@ -11,6 +11,8 @@ import jakarta.persistence.NoResultException;
 
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 
 /*This class provides global way to handle exceptions and customize error responses
@@ -49,16 +51,16 @@ public class GlobalHandlerException {
 		return new ErrorResponse(404, LocalDateTime.now(), ex.getMessage());
 	}
 	
-	@ExceptionHandler(Exception.class)
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	public ErrorResponse handleISError(Exception ex) {
-		return new ErrorResponse(500, LocalDateTime.now(), ex.getMessage());
-	}
-	
 	@ExceptionHandler(IllegalArgumentException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(IllegalArgumentException ex) {
         return new ErrorResponse(400, LocalDateTime.now(), ex.getMessage());
     }
+	
+	@ExceptionHandler(Exception.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ErrorResponse handleISError(Exception ex) {
+		return new ErrorResponse(500, LocalDateTime.now(), ex.getMessage());
+	}
 }
 

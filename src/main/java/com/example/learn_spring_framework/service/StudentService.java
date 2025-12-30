@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
 import com.example.learn_spring_framework.model.Student;
+import com.example.learn_spring_framework.model.User;
 import com.example.learn_spring_framework.repository.IStudentRepository;
 
 import jakarta.persistence.NoResultException;
@@ -20,6 +22,7 @@ import jakarta.persistence.NoResultException;
 public class StudentService {
 	
 	private final IStudentRepository repo;
+	private final PasswordEncoder passwordEncoder;
 	
 	/* Autowired is annotation for dependency injection to connect beans
 	 * 
@@ -35,8 +38,9 @@ public class StudentService {
 	 * -> Service -> Controller -> SpringApplicationApp.run
 	 */
 	@Autowired
-	public StudentService (IStudentRepository repo) {
+	public StudentService (IStudentRepository repo, PasswordEncoder passwordEncoder) {
 		this.repo = repo;
+		this.passwordEncoder = passwordEncoder;
 	}
 	
 	public List<Student> getAllStudent(){
@@ -54,11 +58,13 @@ public class StudentService {
 	public Student add(AddStudentRequest dtoStu) {
 		String newStudentId = dtoStu.getNewStudentId();
 		String newStudentName = dtoStu.getNewStudentName();
-		Student newStudent = new Student(newStudentId, newStudentName);
+		String newUserName = dtoStu.getUserName();
+		String newPassword = dtoStu.getPassword();
+		String newPasswordEncoder = (passwordEncoder.encode(newPassword));
+		Student newStudent = new Student(newStudentId, newStudentName, new User(newUserName, newPasswordEncoder, "STUDENT"));
 		if(repo.existsById(newStudentId))
 			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
-		repo.save(newStudent);
-		return newStudent;
+		return repo.save(newStudent);
 	}
 	
 	public Student modify(String studentId, ModifyStudentRequest dtoMod) {
