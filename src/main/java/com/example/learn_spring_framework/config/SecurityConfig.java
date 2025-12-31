@@ -4,16 +4,20 @@ package com.example.learn_spring_framework.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.learn_spring_framework.filter.AuthTokenFilter;
+import com.example.learn_spring_framework.security.AuthEntryPointJwtSecurity;
 import com.example.learn_spring_framework.service.UserService;
 
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
+
 
 
 /*Spring Security provide authentication and authorization and protection
@@ -27,11 +31,20 @@ import org.springframework.security.config.Customizer;
 @EnableWebSecurity
 public class SecurityConfig{
 	
-	private final PasswordEncoder bcrypt;
+	private final AuthEntryPointJwtSecurity unauthorizeHandler;
+	private final AuthTokenFilter authTokenFilter;
 	
 	@Autowired
-	public SecurityConfig(PasswordEncoder bcrypt) {
-		this.bcrypt = bcrypt;
+	public SecurityConfig(AuthEntryPointJwtSecurity unauthorizeHandler, UserService userService, PasswordEncoder bcrypt, AuthTokenFilter authTokenFilter) {
+		this.unauthorizeHandler = unauthorizeHandler;
+		this.authTokenFilter = authTokenFilter;
+	}
+	
+	@Bean
+	public AuthenticationManager authenticationManager(
+			AuthenticationConfiguration authenticationConfiguration
+			) throws Exception {
+			return authenticationConfiguration.getAuthenticationManager();
 	}
 	
 	@Bean
@@ -47,9 +60,17 @@ public class SecurityConfig{
 		http
 		//  Disable CSRF to test postman
         	.csrf(csrf -> csrf.disable())
+        	.cors(cors -> cors.disable())
+        	.exceptionHandling(exceptionHandling ->
+        			exceptionHandling.authenticationEntryPoint(unauthorizeHandler)
+        	)
+        	.sessionManagement(sessionManagement -> 
+        			sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        	)
 			.authorizeHttpRequests((requests) -> requests 
 					/*Start to configure AuthZ for HTTP requests
 					 */
+					.requestMatchers("/api/auth/**").permitAll()
 					.requestMatchers("/api/students/add_student").permitAll()
 					/* Choose requests that send to main page (/) or (/index)
 					 * 
@@ -63,33 +84,9 @@ public class SecurityConfig{
 					 * 
 					 * -> Purpose: Protect all lefts of the application.
 					 */
-			)
-			.httpBasic(Customizer.withDefaults());
-					/*Configure AuthN method
-					 * 
-					 * -> Purpose: When customer access unlock site, website will
-					 * show you a pop-up that requires you to sign in (default)
-					 */
+			);
+			http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
 			return http.build(); //return the configure object to Spring
 	}
-
-	/*Configure AuthenticationProvider
-	 * 
-	 * Purpose: verifing user credentials during authenticaion process (maybe combine with LDAP, Oauth, SAML)
-	 * 
-	 * DaoAuthenticationProvider: 
-	 * JwtAuthenticationProvider
-	 * RememberMeAuthenticationProvider
-	 * LdapAuthenticationProvider
-	 * OpenIDAuthenticaitonProvider
-	 * 
-	 */
-    @Bean
-    public AuthenticationProvider authenticationProvider(UserService user) {
-    	//DAP This likes brain that combines UserDetailsService (find user) and PasswordEncoder (check pass)
-    	DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(user); // find user from service
-        provider.setPasswordEncoder(bcrypt);     // checking pass
-        return provider;
-    }
 }

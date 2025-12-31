@@ -9,7 +9,6 @@ public class StudentItemResponse {
     private String fullName;
     
 	public StudentItemResponse(String studentId, String fullName) {
-		super();
 		this.studentId = studentId;
 		this.fullName = fullName;
 	}

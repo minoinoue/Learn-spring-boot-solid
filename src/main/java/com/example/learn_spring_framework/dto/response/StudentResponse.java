@@ -38,7 +38,6 @@ public class StudentResponse<T> { //This class can hold every type of Object
 		this.studentId = studentId;
 	}
 	
-	
 	public StudentResponse (LocalDateTime timestamp, int status ,String message, T data) {
 		this.timestamp = timestamp;
 		this.message = message;

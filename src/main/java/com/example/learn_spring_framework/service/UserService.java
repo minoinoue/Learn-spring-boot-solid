@@ -8,23 +8,31 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.example.learn_spring_framework.dto.request.AddStudentRequest;
+import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.model.User;
+import com.example.learn_spring_framework.repository.IStudentRepository;
 import com.example.learn_spring_framework.repository.IUserRepository;
 
 @Service
 public class UserService implements UserDetailsService {
-	private final IUserRepository repo;
+	private final IUserRepository userRepo;
+	private final IStudentRepository stuRepo;
+	private final PasswordEncoder passwordEncoder;
 	
 	@Autowired
-	public UserService(IUserRepository repo) {
-		this.repo = repo;
+	public UserService(IUserRepository userRepo, IStudentRepository stuRepo, PasswordEncoder passwordEncoder) {
+		this.userRepo = userRepo;
+		this.stuRepo = stuRepo;
+		this.passwordEncoder = passwordEncoder;
 	}
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) {
-				Optional<User> user = repo.findByUserName(username);
+				Optional<User> user = userRepo.findByUserName(username);
 				if(user.isEmpty())
 					throw new UsernameNotFoundException("Không thấy tài khoản " + username);
 				User findUser = user.get();

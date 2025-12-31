@@ -96,6 +96,7 @@ public class StudentController {
 			
 			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(),
 																				200,
+	
 																				"Đã tìm thấy sinh viên có " + id + " !",
 																				findStudentById);
 			return ResponseEntity.status(HttpStatus.OK).body(responseBody);
@@ -129,12 +130,12 @@ public class StudentController {
     @PutMapping("/{id}")
 	public ResponseEntity<StudentResponse<Student>> modifyStudent(@PathVariable String id, 
 												@RequestBody @Valid ModifyStudentRequest dtoMod) {
-			Student renameStudent = service.modify(id, dtoMod);
+			Student reStudent = service.modify(id, dtoMod);
 			
 			StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 
 																				200, 
 																				"Cập nhật sinh viên " + id + " thành công",
-																				renameStudent);
+																				reStudent);
 			return ResponseEntity.status(HttpStatus.OK).body(responseBody);
 	}
     

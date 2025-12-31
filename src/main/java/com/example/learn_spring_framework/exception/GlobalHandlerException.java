@@ -11,8 +11,6 @@ import jakarta.persistence.NoResultException;
 
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 
 /*This class provides global way to handle exceptions and customize error responses

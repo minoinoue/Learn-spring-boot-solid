@@ -12,6 +12,7 @@ import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.model.User;
 import com.example.learn_spring_framework.repository.IStudentRepository;
+import com.example.learn_spring_framework.repository.IUserRepository;
 
 import jakarta.persistence.NoResultException;
 
@@ -21,7 +22,8 @@ import jakarta.persistence.NoResultException;
 @Service
 public class StudentService {
 	
-	private final IStudentRepository repo;
+	private final IUserRepository userRepo;
+	private final IStudentRepository stuRepo;
 	private final PasswordEncoder passwordEncoder;
 	
 	/* Autowired is annotation for dependency injection to connect beans
@@ -38,18 +40,19 @@ public class StudentService {
 	 * -> Service -> Controller -> SpringApplicationApp.run
 	 */
 	@Autowired
-	public StudentService (IStudentRepository repo, PasswordEncoder passwordEncoder) {
-		this.repo = repo;
+	public StudentService (IUserRepository userRepo, IStudentRepository stuRepo, PasswordEncoder passwordEncoder) {
+		this.userRepo = userRepo;
+		this.stuRepo = stuRepo;
 		this.passwordEncoder = passwordEncoder;
 	}
 	
 	public List<Student> getAllStudent(){
-		List<Student> allStudent = repo.findAll();
+		List<Student> allStudent = stuRepo.findAll();
 		return allStudent;
 	}
 	
 	public Student getById(String studentId) {
-		Optional<Student> getStudent = repo.findById(studentId);
+		Optional<Student> getStudent = stuRepo.findById(studentId);
 		if(getStudent.isEmpty())
 			throw new NoResultException("Không tìm thấy sinh viên " + studentId + " trong danh sách.");
 		return getStudent.get(); //get the object in Optional's box
@@ -62,25 +65,35 @@ public class StudentService {
 		String newPassword = dtoStu.getPassword();
 		String newPasswordEncoder = (passwordEncoder.encode(newPassword));
 		Student newStudent = new Student(newStudentId, newStudentName, new User(newUserName, newPasswordEncoder, "STUDENT"));
-		if(repo.existsById(newStudentId))
+		if(userRepo.existsByUserName(newStudentId))
+			throw new IllegalStateException("Username đã tồn tại!");
+		if(stuRepo.existsById(newStudentId))
 			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
-		return repo.save(newStudent);
+		return stuRepo.save(newStudent);
 	}
 	
 	public Student modify(String studentId, ModifyStudentRequest dtoMod) {
-		String newFullName = dtoMod.getNewStudentName();
+		String newStudentName = dtoMod.getNewStudentName();
 		Student existingStudent = getById(studentId);
-		existingStudent.setFullName(newFullName);
-		repo.save(existingStudent);
-		return existingStudent;
+		existingStudent.setFullName(newStudentName);
+		User linkedUser = existingStudent.getUser();
+		if (linkedUser != null) {
+			//Update new user name
+			linkedUser.setUserName(dtoMod.getNewUserName());
+			
+			// Update new password
+			String encodedPassword = passwordEncoder.encode(dtoMod.getNewPassword());
+			linkedUser.setPassword(encodedPassword);
+		}
+		return stuRepo.save(existingStudent);
 	}
 	
 	public void delete(String studentId) {
 		Student existingStudent = getById(studentId);
-		repo.delete(existingStudent);
+		stuRepo.delete(existingStudent);
 	}
 	
 	public void deleteAll() {
-		repo.deleteAll();
+		stuRepo.deleteAll();
 	}
 }
