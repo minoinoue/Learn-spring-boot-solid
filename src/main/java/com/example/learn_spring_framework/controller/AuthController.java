@@ -31,41 +31,19 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthController {
 	
-	private final AuthenticationManager authenticationManager;
-	private final JWTUtil jwtUtils;
-	private final StudentService service;
+	private final StudentService stuService;
+	private final UserService userService;
 	
 	@Autowired
-	public AuthController(AuthenticationManager authenticationManager,
-							JWTUtil jwtUtils,
-							StudentService service) {
-		this.authenticationManager = authenticationManager;
-		this.jwtUtils = jwtUtils;
-		this.service = service;
+	public AuthController(StudentService stuService, UserService userService) {
+		this.userService = userService;
+		this.stuService = stuService;
 	}
 	
 	@PostMapping("/signin")
 	public ResponseEntity<LoginResponse> authenticateUser(@RequestBody LoginRequest logindto) {
 		
-		//throw exception when you put wrong user or password
-		Authentication authentication = authenticationManager.authenticate(
-										new UsernamePasswordAuthenticationToken(
-												logindto.getUserName(), 
-												logindto.getPassword()
-		));		
-		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-		
-		String jwtToken = jwtUtils.generateToken(userDetails.getUsername());
-		
-		List<String> roles = userDetails.getAuthorities().stream()
-	            .map(item -> item.getAuthority())
-	            .collect(Collectors.toList());
-		
-		LoginResponse responseBody = new LoginResponse(LocalDateTime.now(),
-													jwtToken,
-													userDetails.getUsername(),
-													roles
-													);
+		LoginResponse responseBody = userService.login(logindto);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
 	}
@@ -73,7 +51,7 @@ public class AuthController {
 	@PostMapping("/signup")
 	public ResponseEntity<StudentResponse<Student>> registerUser(@RequestBody @Valid AddStudentRequest dtoStu) {
 
-		Student newStudent = service.add(dtoStu);
+		Student newStudent = stuService.add(dtoStu);
 				
 		StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 
 				201, 

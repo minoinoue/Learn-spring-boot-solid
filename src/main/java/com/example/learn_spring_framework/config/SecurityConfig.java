@@ -25,13 +25,21 @@ import org.springframework.security.authentication.AuthenticationManager;
  * + AuthN : verifies user identity
  * + Authorization: Controls access using roles and authorities
  * + Filter Chain: Handle request, response between client and dispatcher servlet
+ * 
+ *Flow: 
+ *-> It goes through SecurityFilterChain
+ *-> Meet AuthTokenFilter to check token jwt, if right -> acp authentication
+ *-> goes to authorizeHttpRequest to check if url can be access
+ *-> If everything OK -> request goes to Controller, otherwise, AuthEntryPointJwtSecurity return error 
  */
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig{
 	
+	//Handle error when user try to get information when not sign in yet 
 	private final AuthEntryPointJwtSecurity unauthorizeHandler;
+	//Custom Filter that hold request, check suitable token before send token inside the system 
 	private final AuthTokenFilter authTokenFilter;
 	
 	@Autowired
@@ -41,6 +49,7 @@ public class SecurityConfig{
 	}
 	
 	@Bean
+	//main component to do sign in API -> public in Bean so that we could call it in other Bean
 	public AuthenticationManager authenticationManager(
 			AuthenticationConfiguration authenticationConfiguration
 			) throws Exception {
@@ -59,14 +68,19 @@ public class SecurityConfig{
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 		//  Disable CSRF to test postman
-        	.csrf(csrf -> csrf.disable())
-        	.cors(cors -> cors.disable())
+        	.csrf(csrf -> csrf.disable()) //turn on when use Session/Cookies
+        	.cors(cors -> cors.disable()) //turn on when you authorize Front end calls API
+        	//configure exception
         	.exceptionHandling(exceptionHandling ->
         			exceptionHandling.authenticationEntryPoint(unauthorizeHandler)
+        			//if user doesn't sign in and tries to call security API -> Spring call unauthorizeHandler to return error 401.
         	)
+        	//setting not save session, told Security not to create HTTP Session.
+        	//1 request goes with token beside
         	.sessionManagement(sessionManagement -> 
         			sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         	)
+        	//authorization
 			.authorizeHttpRequests((requests) -> requests 
 					/*Start to configure AuthZ for HTTP requests
 					 */
@@ -85,6 +99,7 @@ public class SecurityConfig{
 					 * -> Purpose: Protect all lefts of the application.
 					 */
 			);
+			// run custom filter jwt before default sign in filter.
 			http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
 			return http.build(); //return the configure object to Spring

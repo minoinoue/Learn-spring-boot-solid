@@ -11,6 +11,7 @@ import jakarta.persistence.NoResultException;
 
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 
 /*This class provides global way to handle exceptions and customize error responses
@@ -59,6 +60,12 @@ public class GlobalHandlerException {
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ErrorResponse handleISError(Exception ex) {
 		return new ErrorResponse(500, LocalDateTime.now(), ex.getMessage());
+	}
+	
+	@ExceptionHandler(BadCredentialsException.class)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	public ErrorResponse handleBadCredential(BadCredentialsException ex) {
+		return new ErrorResponse(401, LocalDateTime.now(), "Tên đăng nhập hoặc mật khẩu sai. Vui lòng thử lại.");
 	}
 }
 

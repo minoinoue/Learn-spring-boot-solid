@@ -15,6 +15,7 @@ import com.example.learn_spring_framework.repository.IStudentRepository;
 import com.example.learn_spring_framework.repository.IUserRepository;
 
 import jakarta.persistence.NoResultException;
+import jakarta.transaction.Transactional;
 
 /*@Service is use for classes that handle business logic code and throw 
  * exceptions.
@@ -58,6 +59,7 @@ public class StudentService {
 		return getStudent.get(); //get the object in Optional's box
 	}
 	
+	@Transactional
 	public Student add(AddStudentRequest dtoStu) {
 		String newStudentId = dtoStu.getNewStudentId();
 		String newStudentName = dtoStu.getNewStudentName();
@@ -72,6 +74,7 @@ public class StudentService {
 		return stuRepo.save(newStudent);
 	}
 	
+	@Transactional
 	public Student modify(String studentId, ModifyStudentRequest dtoMod) {
 		String newStudentName = dtoMod.getNewStudentName();
 		Student existingStudent = getById(studentId);
@@ -88,6 +91,7 @@ public class StudentService {
 		return stuRepo.save(existingStudent);
 	}
 	
+	@Transactional
 	public void delete(String studentId) {
 		Student existingStudent = getById(studentId);
 		stuRepo.delete(existingStudent);
