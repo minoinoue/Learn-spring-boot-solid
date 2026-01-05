@@ -29,6 +29,10 @@ import jakarta.servlet.http.HttpServletResponse;
  * -> Security like a security system design drawing
  * -> JWT Util like a card scanner
  * -> AuthTokenFilter like a security guard hold the JWTUtil to do specific tasks
+ * 
+ * Purpose: To block all incoming requests, retrieve the token from the header, 
+ * and verify its validity. If the token is correct, it informs the system that 
+ * "This user is logged in" by setting the token SecurityContext.
  */
 @Component
 //extends OncePerRequestFilter to make sure that filter run only 1 for 1 request
@@ -50,7 +54,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 		
 		try {
 			String jwt = parseJwt(request); //take token string from header
-			if (jwt != null) {
+			if (jwt != null && !jwt.isEmpty()) {
 				jwtUtils.validateJwtToken(jwt);
 				// check token if valid or expired?
 				
@@ -77,7 +81,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 			ErrorResponse errorResponse = new ErrorResponse(
                     HttpServletResponse.SC_UNAUTHORIZED,
                     LocalDateTime.now(),
-                    e.getMessage() // Lấy thông báo lỗi chi tiết (Hết hạn, sai chữ ký...)
+                    e.getMessage()
             );
 			final ObjectMapper mapper = new ObjectMapper();
             mapper.findAndRegisterModules();

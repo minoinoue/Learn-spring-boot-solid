@@ -36,7 +36,7 @@ public class AuthEntryPointJwtSecurity implements AuthenticationEntryPoint {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpServletResponse.SC_UNAUTHORIZED, 
                 LocalDateTime.now(),
-                "Unauthorized: Bạn cần đăng nhập để truy cập tài nguyên này." 
+                "Bạn cần đăng nhập để truy cập tài nguyên này." 
         );
         //use objectmapper to write json into response
         final ObjectMapper mapper = new ObjectMapper();

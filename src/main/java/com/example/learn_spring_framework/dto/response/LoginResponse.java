@@ -2,8 +2,15 @@ package com.example.learn_spring_framework.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL) //Ignore all null fields
 public class LoginResponse {
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
 	private LocalDateTime timestamp;
     private String token;
     private String username;

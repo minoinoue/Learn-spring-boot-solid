@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ import com.example.learn_spring_framework.util.JWTUtil;
 /*
  * Connect to database to find information of real user and use for authentication
  * 
+ * Purpose: To connect Spring Security to the database. It receives the username, 
+ * searches the database, and converts the username from Useran Entity to UserDetails a 
+ * Security Object so that Spring Security can understand it.
  */
 @Service
 public class UserService implements UserDetailsService {
@@ -36,6 +40,7 @@ public class UserService implements UserDetailsService {
 	private final AuthenticationManager authenticationManager;
 	private final JWTUtil jwtUtils;
 	
+	//@Lazy: Beans won't create AuthenticationManager until beans call it.
 	@Autowired
 	public UserService(IUserRepository userRepo, @Lazy AuthenticationManager authenticationManager, JWTUtil jwtUtils) {
 		this.userRepo = userRepo;
@@ -44,7 +49,13 @@ public class UserService implements UserDetailsService {
 	}
 	
     public LoginResponse login(LoginRequest loginDto) {
-    	//"authenticate" method will check user and pass and throw exception when you put wrong user or password
+    	/*This method will check user and pass and throw exception when you put wrong user or password
+    	 * 
+    	 * Put username, password into UPAT and give to authentication Manager
+    	 * after that, AM will call loadbyUserName from UserService
+    	 * 
+    	 * if you pass, return authentication
+        */
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginDto.getUserName(),
@@ -58,8 +69,8 @@ public class UserService implements UserDetailsService {
         //Create token
         String jwtToken = jwtUtils.generateToken(userDetails.getUsername());
 
-       //transform object type GrantedAuthority into List
-        List<String> roles = userDetails.getAuthorities().stream()
+       //transform Set<Role> into List<GrantedAuthority>
+        List<String> roles = (List<String>) userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
@@ -73,19 +84,19 @@ public class UserService implements UserDetailsService {
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) {
-				Optional<User> user = userRepo.findByUserName(username);
-				if(user.isEmpty())
-					throw new UsernameNotFoundException("Không thấy tài khoản " + username);
-				User findUser = user.get();
-				/*User user = repo.findByUserName(username)
-				 * .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy sinh viên " + username));
-				 */
+				User user = userRepo.findByUserName(username)
+				 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản " + username));
+				 
+				
+				List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+		                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+		                .collect(Collectors.toList());
 	
 				// mapping from Entity User to UserDetails of Spring Security
 		        return new org.springframework.security.core.userdetails.User( //available class in Spring Security thats implement interface UserDetails
-		                findUser.getUserName(),           // get username in DB
-		                findUser.getPassword(),           // get password Bcrypt in DB
-		                Collections.singletonList(new SimpleGrantedAuthority(findUser.getRoles())) 
+		                user.getUserName(),           // get username in DB
+		                user.getPassword(),           // get password Bcrypt in DB
+		                authorities
 		                /*user.getRoles() in database
 		                 *new SimpleGrantedAuthority -> map string "STUDENT" into SimpleGrantedAuthority object -> 
 		                 * 

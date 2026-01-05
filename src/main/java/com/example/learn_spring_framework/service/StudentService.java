@@ -1,7 +1,9 @@
 package com.example.learn_spring_framework.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,8 +11,11 @@ import org.springframework.stereotype.Service;
 
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
+import com.example.learn_spring_framework.model.ERole;
+import com.example.learn_spring_framework.model.Role;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.model.User;
+import com.example.learn_spring_framework.repository.IRoleRepository;
 import com.example.learn_spring_framework.repository.IStudentRepository;
 import com.example.learn_spring_framework.repository.IUserRepository;
 
@@ -26,6 +31,7 @@ public class StudentService {
 	private final IUserRepository userRepo;
 	private final IStudentRepository stuRepo;
 	private final PasswordEncoder passwordEncoder;
+	private final IRoleRepository roleRepo;
 	
 	/* Autowired is annotation for dependency injection to connect beans
 	 * 
@@ -41,10 +47,11 @@ public class StudentService {
 	 * -> Service -> Controller -> SpringApplicationApp.run
 	 */
 	@Autowired
-	public StudentService (IUserRepository userRepo, IStudentRepository stuRepo, PasswordEncoder passwordEncoder) {
+	public StudentService (IUserRepository userRepo, IStudentRepository stuRepo, PasswordEncoder passwordEncoder, IRoleRepository roleRepo) {
 		this.userRepo = userRepo;
 		this.stuRepo = stuRepo;
 		this.passwordEncoder = passwordEncoder;
+		this.roleRepo = roleRepo;
 	}
 	
 	public List<Student> getAllStudent(){
@@ -66,7 +73,13 @@ public class StudentService {
 		String newUserName = dtoStu.getUserName();
 		String newPassword = dtoStu.getPassword();
 		String newPasswordEncoder = (passwordEncoder.encode(newPassword));
-		Student newStudent = new Student(newStudentId, newStudentName, new User(newUserName, newPasswordEncoder, "STUDENT"));
+		
+		Set<Role> roles = new HashSet<>();
+		Role userRole = roleRepo.findByName(ERole.ROLE_STUDENT)
+                .orElseThrow(() -> new RuntimeException("Không thấy role của người dùng."));
+        roles.add(userRole);
+        
+		Student newStudent = new Student(newStudentId, newStudentName, new User(newUserName, newPasswordEncoder, roles));
 		if(userRepo.existsByUserName(newStudentId))
 			throw new IllegalStateException("Username đã tồn tại!");
 		if(stuRepo.existsById(newStudentId))
@@ -91,13 +104,29 @@ public class StudentService {
 		return stuRepo.save(existingStudent);
 	}
 	
+	public List<Student> getBin(){
+		return stuRepo.findAllDeletedStudent();
+	}
+	
 	@Transactional
 	public void delete(String studentId) {
 		Student existingStudent = getById(studentId);
-		stuRepo.delete(existingStudent);
+		existingStudent.setDeleted(true);
+		stuRepo.save(existingStudent);
 	}
 	
 	public void deleteAll() {
 		stuRepo.deleteAll();
+	}
+	
+	
+	public void restore(String studentId) {
+		List<Student> deletedStudent = getBin();
+		for(Student students : deletedStudent) {
+			if(students.getStudentId().equals(studentId)) {
+				students.setDeleted(false);
+				stuRepo.save(students);
+			}
+		}
 	}
 }

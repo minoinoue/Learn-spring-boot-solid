@@ -3,12 +3,12 @@ package com.example.learn_spring_framework.dto.response;
 /*Use for return DTO that don't take the password and username to client
  */
 
-public class StudentItemResponse {
+public class StudentInfoResponse {
 	
 	private String studentId;
     private String fullName;
     
-	public StudentItemResponse(String studentId, String fullName) {
+	public StudentInfoResponse(String studentId, String fullName) {
 		this.studentId = studentId;
 		this.fullName = fullName;
 	}

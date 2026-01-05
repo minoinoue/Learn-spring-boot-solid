@@ -1,16 +1,10 @@
 package com.example.learn_spring_framework.controller;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,14 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.LoginRequest;
 import com.example.learn_spring_framework.dto.response.LoginResponse;
-import com.example.learn_spring_framework.dto.response.StudentResponse;
+import com.example.learn_spring_framework.dto.response.ApiResponse;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.service.StudentService;
 import com.example.learn_spring_framework.service.UserService;
-import com.example.learn_spring_framework.util.JWTUtil;
 
 import jakarta.validation.Valid;
 
+/*
+ * To receive login/registration requests from users, 
+ * call the relevant services to process them, and return the result (token).
+ * 
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -49,14 +47,15 @@ public class AuthController {
 	}
 
 	@PostMapping("/signup")
-	public ResponseEntity<StudentResponse<Student>> registerUser(@RequestBody @Valid AddStudentRequest dtoStu) {
+	public ResponseEntity<ApiResponse<Student>> registerUser(@RequestBody @Valid AddStudentRequest dtoStu) {
 
 		Student newStudent = stuService.add(dtoStu);
 				
-		StudentResponse<Student> responseBody = new StudentResponse<Student>(LocalDateTime.now(), 
-				201, 
-				"Thêm sinh viên mới thành công!",
-				newStudent);
+		ApiResponse<Student> responseBody = new ApiResponse<Student>
+																	(LocalDateTime.now(), 
+																	201, 
+																	"Thêm sinh viên mới thành công!",
+																	newStudent);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
 	}

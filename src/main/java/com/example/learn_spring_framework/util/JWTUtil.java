@@ -32,6 +32,10 @@ import io.jsonwebtoken.security.SignatureException;
  * -> return token to user
  * -> User send request + token -> AuthTokenFilter call validateJWT to check token
  * -> call getUsername to know who is calling -> acp request.
+ * 
+ * Purpose: Contains an algorithm to generate a new token ( generateToken), 
+ * retrieve information from the token ( getUserNameFromToken), 
+ * and verify the token ( validateJwtToken).
  */
 @Component 
 public class JWTUtil {

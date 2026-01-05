@@ -1,5 +1,8 @@
 package com.example.learn_spring_framework.model;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +17,8 @@ import jakarta.persistence.Table;
  */
 @Entity 
 @Table(name = "students") //Name of table
+
+@SQLRestriction("deleted = false")
 public class Student {
 	@Id //Define primary key
 	@Column(name = "student_id") //Name of column of table
@@ -22,9 +27,13 @@ public class Student {
 	@Column(name = "full_name")
 	private String fullName;
 	
-	@OneToOne(cascade = CascadeType.ALL) //When you save Student -> save User
-	@JoinColumn(name = "id", referencedColumnName = "id") //reference key in Student
-	//create column user_id in table students -> hold the "id" of the user that's student have
+	@Column(name = "deleted", nullable = false)
+	private boolean deleted = false;
+	
+	
+	@OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH, CascadeType.REFRESH}) //When you save Student -> save User
+	@JoinColumn(name = "id", referencedColumnName = "id") //reference key in Student, column name id
+	//id of Student will reference to id of user
 	private User user;
 	
 	public Student() {
@@ -76,6 +85,14 @@ public class Student {
 
 	public void setUser(User user) {
 		this.user = user;
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
 	}
 
 	@Override

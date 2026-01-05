@@ -11,7 +11,9 @@ import jakarta.persistence.NoResultException;
 
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 
 /*This class provides global way to handle exceptions and customize error responses
@@ -65,7 +67,19 @@ public class GlobalHandlerException {
 	@ExceptionHandler(BadCredentialsException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ErrorResponse handleBadCredential(BadCredentialsException ex) {
-		return new ErrorResponse(401, LocalDateTime.now(), "Tên đăng nhập hoặc mật khẩu sai. Vui lòng thử lại.");
+		return new ErrorResponse(401, LocalDateTime.now(), "Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.");
+	}
+	
+	@ExceptionHandler(DisabledException.class) 
+	@ResponseStatus(HttpStatus.CONFLICT)
+	public ErrorResponse handleDisabled(DisabledException ex) {
+		return new ErrorResponse(409, LocalDateTime.now(), ex.getMessage());
+	}
+	
+	@ExceptionHandler(AccessDeniedException.class)
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	public ErrorResponse handleForbidden(AccessDeniedException ex) {
+		return new ErrorResponse(403, LocalDateTime.now(), "Bạn không có quyền thực hiện thao tác này.");
 	}
 }
 

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,10 +32,15 @@ import org.springframework.security.authentication.AuthenticationManager;
  *-> Meet AuthTokenFilter to check token jwt, if right -> acp authentication
  *-> goes to authorizeHttpRequest to check if url can be access
  *-> If everything OK -> request goes to Controller, otherwise, AuthEntryPointJwtSecurity return error 
+ *
+ *Purpose: To establish security rules: disable CSRF/CORS, define which APIs are public ( permitAll) 
+ *or need to be secure ( authenticated), disable Session (Stateless), 
+ *and arrange the position of filters ( AuthTokenFilterrun first).
  */
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity //enable to use @PreAuthorize in Controller to check authorization before run method
 public class SecurityConfig{
 	
 	//Handle error when user try to get information when not sign in yet 
@@ -69,7 +75,7 @@ public class SecurityConfig{
 		http
 		//  Disable CSRF to test postman
         	.csrf(csrf -> csrf.disable()) //turn on when use Session/Cookies
-        	.cors(cors -> cors.disable()) //turn on when you authorize Front end calls API
+          //.cors(cors -> cors.disable()) //turn on when you authorize Front end calls API
         	//configure exception
         	.exceptionHandling(exceptionHandling ->
         			exceptionHandling.authenticationEntryPoint(unauthorizeHandler)
@@ -85,7 +91,6 @@ public class SecurityConfig{
 					/*Start to configure AuthZ for HTTP requests
 					 */
 					.requestMatchers("/api/auth/**").permitAll()
-					.requestMatchers("/api/students/add_student").permitAll()
 					/* Choose requests that send to main page (/) or (/index)
 					 * 
 					 * permitAll(): allow everyone
