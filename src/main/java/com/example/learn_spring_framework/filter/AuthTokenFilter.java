@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.learn_spring_framework.dto.response.ErrorResponse;
+import com.example.learn_spring_framework.dto.response.ApiResponse;
 import com.example.learn_spring_framework.exception.InvalidJwtException;
 import com.example.learn_spring_framework.service.UserService;
 import com.example.learn_spring_framework.util.JWTUtil;
@@ -78,9 +78,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 		} catch (InvalidJwtException e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 	        response.setContentType("application/json;charset=UTF-8");
-			ErrorResponse errorResponse = new ErrorResponse(
-                    HttpServletResponse.SC_UNAUTHORIZED,
+	        ApiResponse<Void> errorResponse = new ApiResponse<Void>(
                     LocalDateTime.now(),
+                    HttpServletResponse.SC_UNAUTHORIZED,
                     e.getMessage()
             );
 			final ObjectMapper mapper = new ObjectMapper();

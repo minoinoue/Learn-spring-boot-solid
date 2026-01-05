@@ -7,7 +7,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import com.example.learn_spring_framework.dto.response.ErrorResponse;
+import com.example.learn_spring_framework.dto.response.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,9 +33,9 @@ public class AuthEntryPointJwtSecurity implements AuthenticationEntryPoint {
 			) throws IOException {
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpServletResponse.SC_UNAUTHORIZED, 
-                LocalDateTime.now(),
+        ApiResponse<Void> errorResponse = new ApiResponse<Void>(
+                LocalDateTime.now(), 
+                HttpServletResponse.SC_UNAUTHORIZED,
                 "Bạn cần đăng nhập để truy cập tài nguyên này." 
         );
         //use objectmapper to write json into response

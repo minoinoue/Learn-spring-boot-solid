@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.example.learn_spring_framework.dto.response.ErrorResponse;
+import com.example.learn_spring_framework.dto.response.ApiResponse;
 
 import jakarta.persistence.NoResultException;
 
@@ -27,7 +27,7 @@ public class GlobalHandlerException {
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class) //Define what's error in this method will be captured
 	@ResponseStatus(HttpStatus.BAD_REQUEST) //Define type of status that returns to client
-	public ErrorResponse handValidationException(MethodArgumentNotValidException ex) {
+	public ApiResponse<Void> handValidationException(MethodArgumentNotValidException ex) {
 		String errorMessage = "Dữ liệu không hợp lệ";
 		//Check if errors exist
 		if(ex.getBindingResult().hasErrors()) {
@@ -37,49 +37,49 @@ public class GlobalHandlerException {
 				//get the message from annotation validation in dto 
 			}
 		}
-		return new ErrorResponse(400, LocalDateTime.now(), errorMessage); //return the DTO to client
+		return new ApiResponse<Void>(LocalDateTime.now(), 400, errorMessage); //return the DTO to client
 	}
 	
 	@ExceptionHandler(IllegalStateException.class)
 	@ResponseStatus(HttpStatus.CONFLICT)
-	public ErrorResponse handleConflict(IllegalStateException ex) {
-		return new ErrorResponse(409, LocalDateTime.now(), ex.getMessage());
+	public ApiResponse<Void> handleConflict(IllegalStateException ex) {
+		return new ApiResponse<Void>(LocalDateTime.now(), 409, ex.getMessage());
 	}
 	
 	@ExceptionHandler(NoResultException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
-	public ErrorResponse handleNotFound(NoResultException ex) {
-		return new ErrorResponse(404, LocalDateTime.now(), ex.getMessage());
+	public ApiResponse<Void> handleNotFound(NoResultException ex) {
+		return new ApiResponse<Void>(LocalDateTime.now(), 404, ex.getMessage());
 	}
 	
 	@ExceptionHandler(IllegalArgumentException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadRequest(IllegalArgumentException ex) {
-        return new ErrorResponse(400, LocalDateTime.now(), ex.getMessage());
+    public ApiResponse<Void> handleBadRequest(IllegalArgumentException ex) {
+        return new ApiResponse<Void>(LocalDateTime.now(), 400, ex.getMessage());
     }
 	
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	public ErrorResponse handleISError(Exception ex) {
-		return new ErrorResponse(500, LocalDateTime.now(), ex.getMessage());
+	public ApiResponse<Void> handleISError(Exception ex) {
+		return new ApiResponse<Void>(LocalDateTime.now(), 500, ex.getMessage());
 	}
 	
 	@ExceptionHandler(BadCredentialsException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
-	public ErrorResponse handleBadCredential(BadCredentialsException ex) {
-		return new ErrorResponse(401, LocalDateTime.now(), "Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.");
+	public ApiResponse<Void> handleBadCredential(BadCredentialsException ex) {
+		return new ApiResponse<Void>(LocalDateTime.now(), 401, "Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.");
 	}
 	
 	@ExceptionHandler(DisabledException.class) 
 	@ResponseStatus(HttpStatus.CONFLICT)
-	public ErrorResponse handleDisabled(DisabledException ex) {
-		return new ErrorResponse(409, LocalDateTime.now(), ex.getMessage());
+	public ApiResponse<Void> handleDisabled(DisabledException ex) {
+		return new ApiResponse<Void>(LocalDateTime.now(), 409, ex.getMessage());
 	}
 	
 	@ExceptionHandler(AccessDeniedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public ErrorResponse handleForbidden(AccessDeniedException ex) {
-		return new ErrorResponse(403, LocalDateTime.now(), "Bạn không có quyền thực hiện thao tác này.");
+	public ApiResponse<Void> handleForbidden(AccessDeniedException ex) {
+		return new ApiResponse<Void>(LocalDateTime.now(), 403, "Bạn không có quyền thực hiện thao tác này.");
 	}
 }
 

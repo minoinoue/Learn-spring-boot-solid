@@ -94,7 +94,7 @@ public class StudentController {
 	// http://localhost:8080/api/students/bin GET
     @GetMapping("/bin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<StudentInfoResponse>>> getDeletedStudent() {
+    public ResponseEntity<ApiResponse<List<StudentInfoResponse>>> getAllDeletedStudent() {
     		List<Student> deletedList = service.getBin();
     		
     		//map into dto
@@ -196,7 +196,7 @@ public class StudentController {
  // http://localhost:8080/api/students/restore/SV001 PATCH
     @PatchMapping("/restore/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Student>> restoreStudent(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Student>> restoreDeletedStudent(@PathVariable String id) {
 	        service.restore(id);
 	        
 	        //after restore we can call back getById to take information response
