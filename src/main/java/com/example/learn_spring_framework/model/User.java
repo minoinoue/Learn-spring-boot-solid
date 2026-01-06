@@ -3,6 +3,8 @@ package com.example.learn_spring_framework.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Entity;
@@ -37,6 +39,7 @@ public class User {
 	
 	//1-1 relationship
 	@OneToOne(mappedBy = "user") //it means Student holds the reference key
+	@JsonIgnore
 	//Find the "user" variable in class Student
 	private Student student;
 	/*This student is used to trace back, because this relation ship is
@@ -84,7 +87,13 @@ public class User {
 		this.roles = roles;
 	}
 
+	public Student getStudent() {
+		return student;
+	}
+
 	public void setStudent(Student student) {
 		this.student = student;
 	}
+	
+	
 }

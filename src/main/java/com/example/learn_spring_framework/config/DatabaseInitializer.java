@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -14,12 +15,20 @@ import com.example.learn_spring_framework.model.User;
 import com.example.learn_spring_framework.repository.IRoleRepository;
 import com.example.learn_spring_framework.repository.IUserRepository;
 
+
 @Component
 public class DatabaseInitializer implements CommandLineRunner {
 
-    private IRoleRepository roleRepository;
-    private IUserRepository userRepository;
-    private PasswordEncoder passwordEncoder;
+    private final IRoleRepository roleRepository;
+    private final IUserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    
+    @Value("${app.config.adUserName}")
+    private String adminUserName;
+    
+    @Value("${app.config.adPassword}")
+    private String adminPassword;
+    
     
     @Autowired
     public DatabaseInitializer(IRoleRepository roleRepository, IUserRepository userRepository, PasswordEncoder passwordEncoder) {
@@ -37,10 +46,10 @@ public class DatabaseInitializer implements CommandLineRunner {
             roleRepository.save(new Role(ERole.ROLE_STUDENT));
         }
 
-        if (!userRepository.existsByUserName("admin")) {
+        if (!userRepository.existsByUserName(adminUserName)) {
             User admin = new User();
-            admin.setUserName("admin");
-            admin.setPassword(passwordEncoder.encode("admin@123"));
+            admin.setUserName(adminUserName);
+            admin.setPassword(passwordEncoder.encode(adminPassword));
 
             Set<Role> roles = new HashSet<>();
             Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN).get();
@@ -48,7 +57,7 @@ public class DatabaseInitializer implements CommandLineRunner {
             admin.setRoles(roles);
 
             userRepository.save(admin);
-            System.out.println(">>> Đã tạo tài khoản ADMIN mẫu: admin");
+            System.out.println("Đã tạo tài khoản admin mẫu");
         }
     }
 }

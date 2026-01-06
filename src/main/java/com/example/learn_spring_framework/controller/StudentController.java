@@ -22,6 +22,7 @@ import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
 import com.example.learn_spring_framework.dto.response.StudentInfoResponse;
 import com.example.learn_spring_framework.dto.response.ApiResponse;
 import com.example.learn_spring_framework.model.Student;
+import com.example.learn_spring_framework.service.RegistrationService;
 import com.example.learn_spring_framework.service.StudentService;
 
 import jakarta.validation.Valid;
@@ -61,10 +62,12 @@ import java.time.LocalDateTime;
 public class StudentController {
 	
 	private final StudentService service;
+	private final RegistrationService registrationService;
 	
 	@Autowired
-	public StudentController(StudentService service) {
+	public StudentController(StudentService service, RegistrationService registrationService) {
 		this.service = service;
+		this.registrationService = registrationService;
 	}
 
 	// http://localhost:8080/api/students GET
@@ -103,10 +106,10 @@ public class StudentController {
     	            .collect(Collectors.toList());
     		
     		ApiResponse<List<StudentInfoResponse>> responseBody = new ApiResponse<>(
-    	            LocalDateTime.now(),
-    	            200,
-    	            "Danh sách sinh viên đã xóa",
-    	            responseList);
+											    	            LocalDateTime.now(),
+											    	            200,
+											    	            "Danh sách sinh viên đã xóa",
+											    	            responseList);
     		
     		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
   
@@ -115,16 +118,18 @@ public class StudentController {
 	// http://localhost:8080/api/students/1 GET
 	@GetMapping("/{id}")
 	//PathVariable is used to get variable from url
-	public ResponseEntity<ApiResponse<Student>> findStudent(@PathVariable String id) {
-			Student findStudentById = service.getById(id);
-			
-			ApiResponse<Student> responseBody = new ApiResponse<Student>
-															(LocalDateTime.now(),
-															200,
-															"Đã tìm thấy sinh viên có " + id + " !",
-															findStudentById);
-			return ResponseEntity.status(HttpStatus.OK).body(responseBody);
-	}
+	public ResponseEntity<ApiResponse<StudentInfoResponse>> findStudent(@PathVariable String id) {
+		Student student = service.getById(id);
+		
+		StudentInfoResponse responseData = new StudentInfoResponse(student.getStudentId(), student.getFullName());
+		
+		ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<>(
+				                                              LocalDateTime.now(), 
+				                                              200, 
+				                                              "Đã tìm thấy sinh viên có " + id + " !", 
+				                                              responseData);
+		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+}
 	
     // http://localhost:8080/api/students/add_student POST
     @PostMapping("/add_student")
@@ -133,19 +138,21 @@ public class StudentController {
      * @RequestBody need a return a body type DTO AddStudentRequest (will be transform into JSON by Jackson)
      */
     @PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<ApiResponse<Student>> addStudent(@RequestBody @Valid AddStudentRequest dtoStu) {
+	public ResponseEntity<ApiResponse<StudentInfoResponse>> addStudent(@RequestBody @Valid AddStudentRequest dtoStu) {
     	/*ResponseEntity is represent for HTTP Response includes HTTP status code, body, HTTP headers
     	 * <StudentResponse<Student>> in here is type of return (body)
     	 * 
     	 * Context: API return HTTP response include type of DTO (StudentResponse has Student type)
     	 */
-    		Student newStudent = service.add(dtoStu);
+    		Student newStudent = registrationService.registerStudent(dtoStu);
+    		
+    		StudentInfoResponse responseData = new StudentInfoResponse(newStudent.getStudentId(), newStudent.getFullName());
 			
-			ApiResponse<Student> responseBody = new ApiResponse<Student>
+			ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<StudentInfoResponse>
 															(LocalDateTime.now(), 
 															201, 
 															"Thêm sinh viên mới thành công!",
-															newStudent);
+															responseData);
 			//Create a DTO return result
 			return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
 			//Return HTTP status code and response body DTO to client
@@ -155,58 +162,60 @@ public class StudentController {
     //@RequestBody need a return a body type DTO ModifyStudent so in the body you just only use newStudentName variable
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<ApiResponse<Student>> modifyStudent(@PathVariable String id, 
-												@RequestBody @Valid ModifyStudentRequest dtoMod) {
+    public ResponseEntity<ApiResponse<StudentInfoResponse>> modifyStudent(@PathVariable String id, 
+			@RequestBody @Valid ModifyStudentRequest dtoMod) {
 			Student reStudent = service.modify(id, dtoMod);
 			
-			ApiResponse<Student> responseBody = new ApiResponse<Student>
-															(LocalDateTime.now(), 
-															200, 
-															"Cập nhật sinh viên " + id + " thành công",
-															reStudent);
+			StudentInfoResponse responseData = new StudentInfoResponse(reStudent.getStudentId(), reStudent.getFullName());
+			
+			ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<>(
+																LocalDateTime.now(), 
+																200, 
+																"Cập nhật sinh viên " + id + " thành công", 
+																responseData);
 			return ResponseEntity.status(HttpStatus.OK).body(responseBody);
-	}
+}
     
     //http://localhost:8080/api/students/1 DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Student>> deleteStudent(@PathVariable String id) {
-    		service.delete(id);
-    		
-    		ApiResponse<Student> responseBody = new ApiResponse<Student>
-    														(LocalDateTime.now(), 
-    														200,	
-    														"Đã xóa sinh viên với id = " + id + " thành công");
-    		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
-    }
+    public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable String id) {
+		service.delete(id);
+		
+		ApiResponse<Void> responseBody = new ApiResponse<>(
+				                                          LocalDateTime.now(), 
+				                                          200, 
+				                                          "Đã xóa sinh viên với id = " + id + " thành công");
+		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+}
     
     //http://localhost:8080/api/students/ DELETE
     @DeleteMapping("/delete_all")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Student>> deleteAllStudent() {
-    		service.deleteAll();
-    		
-    		ApiResponse<Student> responseBody = new ApiResponse<Student>
-    														(LocalDateTime.now(),
-    														200,
-    														"Đã xóa toàn bộ danh sách sinh viên.");
-    		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
-    }
+    public ResponseEntity<ApiResponse<Void>> deleteAllStudent() {
+		service.deleteAll();
+		
+		ApiResponse<Void> responseBody = new ApiResponse<>(
+				                                          LocalDateTime.now(), 
+				                                          200, 
+				                                          "Đã xóa toàn bộ danh sách sinh viên.");
+		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+}
     
  // http://localhost:8080/api/students/restore/SV001 PATCH
     @PatchMapping("/restore/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Student>> restoreDeletedStudent(@PathVariable String id) {
-	        service.restore(id);
-	        
-	        //after restore we can call back getById to take information response
-	        Student restoredStudent = service.getById(id);
-	
-	        ApiResponse<Student> responseBody = new ApiResponse<>
-													            (LocalDateTime.now(),
-													            200,
-													            "Khôi phục sinh viên " + id + " thành công!",
-													            restoredStudent);
-	        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
-    }
+    public ResponseEntity<ApiResponse<StudentInfoResponse>> restoreStudent(@PathVariable String id) {
+        service.restore(id);
+        Student restoredStudent = service.getById(id);
+
+		StudentInfoResponse responseData = new StudentInfoResponse(restoredStudent.getStudentId(), restoredStudent.getFullName());
+
+        ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<>(
+        		                                            LocalDateTime.now(), 
+        		                                            200, 
+        		                                            "Khôi phục sinh viên " + id + " thành công!", 
+        		                                            responseData);
+        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+}
 }

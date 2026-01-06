@@ -20,7 +20,7 @@ import com.example.learn_spring_framework.repository.IStudentRepository;
 import com.example.learn_spring_framework.repository.IUserRepository;
 
 import jakarta.persistence.NoResultException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 /*@Service is use for classes that handle business logic code and throw 
  * exceptions.
@@ -28,10 +28,9 @@ import jakarta.transaction.Transactional;
 @Service
 public class StudentService {
 	
-	private final IUserRepository userRepo;
 	private final IStudentRepository stuRepo;
-	private final PasswordEncoder passwordEncoder;
-	private final IRoleRepository roleRepo;
+	private final UserService userService;
+	
 	
 	/* Autowired is annotation for dependency injection to connect beans
 	 * 
@@ -47,11 +46,9 @@ public class StudentService {
 	 * -> Service -> Controller -> SpringApplicationApp.run
 	 */
 	@Autowired
-	public StudentService (IUserRepository userRepo, IStudentRepository stuRepo, PasswordEncoder passwordEncoder, IRoleRepository roleRepo) {
-		this.userRepo = userRepo;
+	public StudentService (UserService userService, IStudentRepository stuRepo) {
 		this.stuRepo = stuRepo;
-		this.passwordEncoder = passwordEncoder;
-		this.roleRepo = roleRepo;
+		this.userService = userService;
 	}
 	
 	public List<Student> getAllStudent(){
@@ -67,39 +64,29 @@ public class StudentService {
 	}
 	
 	@Transactional
-	public Student add(AddStudentRequest dtoStu) {
-		String newStudentId = dtoStu.getNewStudentId();
-		String newStudentName = dtoStu.getNewStudentName();
-		String newUserName = dtoStu.getUserName();
-		String newPassword = dtoStu.getPassword();
-		String newPasswordEncoder = (passwordEncoder.encode(newPassword));
+	public Student add(AddStudentRequest dtoStu, User savedUser) {
 		
-		Set<Role> roles = new HashSet<>();
-		Role userRole = roleRepo.findByName(ERole.ROLE_STUDENT)
-                .orElseThrow(() -> new RuntimeException("Không thấy role của người dùng."));
-        roles.add(userRole);
-        
-		Student newStudent = new Student(newStudentId, newStudentName, new User(newUserName, newPasswordEncoder, roles));
-		if(userRepo.existsByUserName(newStudentId))
-			throw new IllegalStateException("Username đã tồn tại!");
+		String newStudentId = dtoStu.getNewStudentId();
 		if(stuRepo.existsById(newStudentId))
 			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
+		
+		String newStudentName = dtoStu.getNewStudentName();
+        
+		Student newStudent = new Student(newStudentId, newStudentName, savedUser);
+		
 		return stuRepo.save(newStudent);
 	}
 	
 	@Transactional
 	public Student modify(String studentId, ModifyStudentRequest dtoMod) {
 		String newStudentName = dtoMod.getNewStudentName();
+		String newStudentUserName = dtoMod.getNewUserName();
+		String newStudentPassword = dtoMod.getNewPassword();
 		Student existingStudent = getById(studentId);
 		existingStudent.setFullName(newStudentName);
-		User linkedUser = existingStudent.getUser();
-		if (linkedUser != null) {
-			//Update new user name
-			linkedUser.setUserName(dtoMod.getNewUserName());
-			
-			// Update new password
-			String encodedPassword = passwordEncoder.encode(dtoMod.getNewPassword());
-			linkedUser.setPassword(encodedPassword);
+		User modUser = existingStudent.getUser();
+		if (modUser != null) {
+			userService.modifyUser(modUser, newStudentUserName, newStudentPassword);
 		}
 		return stuRepo.save(existingStudent);
 	}
@@ -119,14 +106,10 @@ public class StudentService {
 		stuRepo.deleteAll();
 	}
 	
-	
+	@Transactional
 	public void restore(String studentId) {
-		List<Student> deletedStudent = getBin();
-		for(Student students : deletedStudent) {
-			if(students.getStudentId().equals(studentId)) {
-				students.setDeleted(false);
-				stuRepo.save(students);
-			}
-		}
+		Student deletedStudent = stuRepo.findDeletedStudentById(studentId);
+				deletedStudent.setDeleted(false);
+				stuRepo.save(deletedStudent);
 	}
 }

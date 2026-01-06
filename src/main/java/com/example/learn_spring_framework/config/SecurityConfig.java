@@ -49,7 +49,7 @@ public class SecurityConfig{
 	private final AuthTokenFilter authTokenFilter;
 	
 	@Autowired
-	public SecurityConfig(AuthEntryPointJwtSecurity unauthorizeHandler, UserService userService, PasswordEncoder bcrypt, AuthTokenFilter authTokenFilter) {
+	public SecurityConfig(AuthEntryPointJwtSecurity unauthorizeHandler, AuthTokenFilter authTokenFilter) {
 		this.unauthorizeHandler = unauthorizeHandler;
 		this.authTokenFilter = authTokenFilter;
 	}

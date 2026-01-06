@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.LoginRequest;
 import com.example.learn_spring_framework.dto.response.LoginResponse;
+import com.example.learn_spring_framework.dto.response.StudentInfoResponse;
 import com.example.learn_spring_framework.dto.response.ApiResponse;
 import com.example.learn_spring_framework.model.Student;
+import com.example.learn_spring_framework.service.RegistrationService;
 import com.example.learn_spring_framework.service.StudentService;
 import com.example.learn_spring_framework.service.UserService;
 
@@ -27,15 +29,15 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/auth")
-public class AuthController {
+public class UserController {
 	
-	private final StudentService stuService;
 	private final UserService userService;
+	private final RegistrationService registrationService;
 	
 	@Autowired
-	public AuthController(StudentService stuService, UserService userService) {
+	public UserController(UserService userService, RegistrationService registrationService) {
 		this.userService = userService;
-		this.stuService = stuService;
+		this.registrationService = registrationService;
 	}
 	
 	@PostMapping("/signin")
@@ -47,15 +49,20 @@ public class AuthController {
 	}
 
 	@PostMapping("/signup")
-	public ResponseEntity<ApiResponse<Student>> registerUser(@RequestBody @Valid AddStudentRequest dtoStu) {
+	public ResponseEntity<ApiResponse<StudentInfoResponse>> registerUser(@RequestBody @Valid AddStudentRequest dtoStu) {
 
-		Student newStudent = stuService.add(dtoStu);
+		Student newStudent = registrationService.registerStudent(dtoStu);
+		
+		StudentInfoResponse responseData = new StudentInfoResponse(
+				newStudent.getStudentId(), 
+				newStudent.getFullName()
+		);
 				
-		ApiResponse<Student> responseBody = new ApiResponse<Student>
+		ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<StudentInfoResponse>
 																	(LocalDateTime.now(), 
 																	201, 
 																	"Thêm sinh viên mới thành công!",
-																	newStudent);
+																	responseData);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
 	}

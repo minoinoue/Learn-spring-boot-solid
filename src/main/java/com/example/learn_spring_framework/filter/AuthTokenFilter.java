@@ -38,13 +38,15 @@ import jakarta.servlet.http.HttpServletResponse;
 //extends OncePerRequestFilter to make sure that filter run only 1 for 1 request
 public class AuthTokenFilter extends OncePerRequestFilter {
 	
-	@Autowired
 	private JWTUtil jwtUtils;
-	
-	@Autowired
 	//take detail informations from user from database base on username from token
 	private  UserService userService;
 
+	@Autowired
+	public AuthTokenFilter(JWTUtil jwtUtils, UserService userService) {
+		this.jwtUtils = jwtUtils;
+		this.userService = userService;
+	}
 	@Override
 	protected void doFilterInternal(
 			HttpServletRequest request,
