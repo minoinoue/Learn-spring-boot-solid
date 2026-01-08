@@ -17,7 +17,6 @@ import jakarta.persistence.Table;
 @Entity 
 @Table(name = "students") //Name of table
 
-@SQLRestriction("deleted = false")
 public class Student {
 	@Id //Define primary key
 	@Column(name = "student_id") //Name of column of table

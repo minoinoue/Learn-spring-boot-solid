@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.learn_spring_framework.model.Student;
@@ -26,10 +25,12 @@ import jakarta.transaction.Transactional;
 
 @Repository
 public interface IStudentRepository extends JpaRepository<Student, String> {
-		@Query(value = "SELECT * FROM students WHERE deleted = true", nativeQuery = true)
-		List<Student> findAllDeletedStudent();
+		List<Student> findAllByDeletedFalse();
 		
-//		@Query(value = "SELECT * FROM students WHERE student_id = :student_id AND deleted = true", nativeQuery = true)
+		List<Student> findAllByDeletedTrue();
+		
+		Optional<Student> findByStudentIdAndDeletedFalse(String studentId);
+		
 		Optional<Student> findStudentByStudentIdAndDeleted(String studentId, boolean deleted);
 		
 		@Modifying

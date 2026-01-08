@@ -49,13 +49,13 @@ public class StudentServiceImpl implements IStudentService{
 	
 	@Override
 	public List<Student> getAllStudent(){
-		List<Student> allStudent = stuRepo.findAll();
+		List<Student> allStudent = stuRepo.findAllByDeletedFalse();
 		return allStudent;
 	}
 	
 	@Override
 	public Student getById(String studentId) {
-		Optional<Student> getStudent = stuRepo.findById(studentId);
+		Optional<Student> getStudent = stuRepo.findByStudentIdAndDeletedFalse(studentId);
 		if(getStudent.isEmpty())
 			throw new NoResultException("Không tìm thấy sinh viên " + studentId + " trong danh sách.");
 		return getStudent.get(); //get the object in Optional's box
@@ -91,7 +91,7 @@ public class StudentServiceImpl implements IStudentService{
 	
 	@Override
 	public List<Student> getBin(){
-		return stuRepo.findAllDeletedStudent();
+		return stuRepo.findAllByDeletedTrue();
 	}
 	
 	@Override
