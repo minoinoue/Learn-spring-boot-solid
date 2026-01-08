@@ -1,9 +1,8 @@
-package com.example.learn_spring_framework.service;
+package com.example.learn_spring_framework.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,19 +18,16 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.LoginRequest;
 import com.example.learn_spring_framework.dto.response.LoginResponse;
-import com.example.learn_spring_framework.model.ERole;
+import com.example.learn_spring_framework.enums.ERole;
 import com.example.learn_spring_framework.model.Role;
-import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.model.User;
-import com.example.learn_spring_framework.repository.IRoleRepository;
-import com.example.learn_spring_framework.repository.IStudentRepository;
 import com.example.learn_spring_framework.repository.IUserRepository;
+import com.example.learn_spring_framework.service.IRolesService;
+import com.example.learn_spring_framework.service.IUserService;
 import com.example.learn_spring_framework.util.JWTUtil;
 
-import jakarta.persistence.NoResultException;
 import org.springframework.transaction.annotation.Transactional;
 /*
  * Connect to database to find information of real user and use for authentication
@@ -41,16 +37,16 @@ import org.springframework.transaction.annotation.Transactional;
  * Security Object so that Spring Security can understand it.
  */
 @Service
-public class UserService implements UserDetailsService {
+public class UserServiceImpl implements UserDetailsService, IUserService {
 	private final IUserRepository userRepo;
-	private final RolesService rolesService;
+	private final IRolesService rolesService;
 	private final AuthenticationManager authenticationManager;
 	private final PasswordEncoder passwordEncoder;
 	private final JWTUtil jwtUtils;
 	
 	//@Lazy: Beans won't create AuthenticationManager until beans call it.
 	@Autowired
-	public UserService(IUserRepository userRepo, @Lazy AuthenticationManager authenticationManager, JWTUtil jwtUtils, RolesService rolesService, PasswordEncoder passwordEncoder) {
+	public UserServiceImpl(IUserRepository userRepo, @Lazy AuthenticationManager authenticationManager, JWTUtil jwtUtils, IRolesService rolesService, PasswordEncoder passwordEncoder) {
 		this.userRepo = userRepo;
 		this.authenticationManager = authenticationManager;
 		this.jwtUtils = jwtUtils;
@@ -58,6 +54,7 @@ public class UserService implements UserDetailsService {
 		this.passwordEncoder = passwordEncoder;
 	}
 	
+	@Override
     public LoginResponse login(LoginRequest loginDto) {
     	/*This method will check user and pass and throw exception when you put wrong user or password
     	 * 
@@ -91,25 +88,30 @@ public class UserService implements UserDetailsService {
                 roles
         );
     }
-
-    
+	
+	@Override
     @Transactional
-    public User createUserAccount(String userName, String password) {
+    public User createStudentUser(String userName, String password) {
     	if (userRepo.existsByUserName(userName)) {
     		throw new IllegalStateException("Username đã tồn tại!");
     	}
     	Role userRole = rolesService.getRoleByName(ERole.ROLE_STUDENT);
     	
-    	User newUser = new User();
-    	newUser.setUserName(userName);
-        newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setRoles(Collections.singleton(userRole));
+    	String encodedPassword = passwordEncoder.encode(password);
         
-        return userRepo.save(newUser);
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+
+        return new User(userName, encodedPassword, roles);
     }
 	
+	@Override
     @Transactional
     public User modifyUser(User user, String newUserName, String newPassword) {
+    	if(!user.getUserName().equals(newUserName))
+    		if (userRepo.existsByUserName(newUserName)) {
+                throw new IllegalStateException("Username '" + newUserName + "' đã tồn tại!");
+            }
        	user.setUserName(newUserName);
        	if (passwordEncoder.matches(newPassword, user.getPassword())) {
             throw new IllegalArgumentException("Mật khẩu mới không được trùng với mật khẩu cũ!");

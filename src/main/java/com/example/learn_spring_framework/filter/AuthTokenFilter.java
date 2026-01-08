@@ -13,7 +13,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.learn_spring_framework.dto.response.ApiResponse;
 import com.example.learn_spring_framework.exception.InvalidJwtException;
-import com.example.learn_spring_framework.service.UserService;
+import com.example.learn_spring_framework.service.IUserService;
+import com.example.learn_spring_framework.service.impl.UserServiceImpl;
 import com.example.learn_spring_framework.util.JWTUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,10 +41,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 	
 	private JWTUtil jwtUtils;
 	//take detail informations from user from database base on username from token
-	private  UserService userService;
+	private  IUserService userService;
 
 	@Autowired
-	public AuthTokenFilter(JWTUtil jwtUtils, UserService userService) {
+	public AuthTokenFilter(JWTUtil jwtUtils, IUserService userService) {
 		this.jwtUtils = jwtUtils;
 		this.userService = userService;
 	}

@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
 import com.example.learn_spring_framework.dto.response.StudentInfoResponse;
+import com.example.learn_spring_framework.mapper.IStudentMapper;
 import com.example.learn_spring_framework.dto.response.ApiResponse;
 import com.example.learn_spring_framework.model.Student;
-import com.example.learn_spring_framework.service.RegistrationService;
-import com.example.learn_spring_framework.service.StudentService;
+import com.example.learn_spring_framework.service.IStudentService;
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
@@ -61,19 +61,19 @@ import java.time.LocalDateTime;
 @RequestMapping("/api/students") //default URL for controller
 public class StudentController {
 	
-	private final StudentService service;
-	private final RegistrationService registrationService;
+	private final IStudentService stuService;
+	private final IStudentMapper stuMapper;
 	
 	@Autowired
-	public StudentController(StudentService service, RegistrationService registrationService) {
-		this.service = service;
-		this.registrationService = registrationService;
+	public StudentController(IStudentService stuService, IStudentMapper stuMapper) {
+		this.stuService = stuService;
+		this.stuMapper = stuMapper;
 	}
 
 	// http://localhost:8080/api/students GET
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<StudentInfoResponse>>> showStudent() {
-			List<Student> dsach = service.getAllStudent();
+			List<Student> dsach = stuService.getAllStudent();
 			/*
 			 * stream() is a flexible way to process collections of object like mapping, reducing, sorting
 			 * 
@@ -81,29 +81,25 @@ public class StudentController {
 			 * 
 			 * collect(Collectors.toList()) returns result stream into List
 			 */
-			List<StudentInfoResponse> dsachList =  dsach.stream()
-				.map(student -> new StudentInfoResponse(student.getStudentId(), student.getFullName()))
-						.collect(Collectors.toList());
+			List<StudentInfoResponse> dsachList = stuMapper.toResponseList(dsach);
 			
 			ApiResponse<List<StudentInfoResponse>> responseBody = new ApiResponse<List<StudentInfoResponse>>
 																						(LocalDateTime.now(),
 																						200,
-																						null,
+																						"Lấy danh sách thành công",
 																						dsachList);
 			
-			return ResponseEntity.status(HttpStatus.OK).body(responseBody); 
+			return ResponseEntity.ok(responseBody); 
 	}
 	
 	// http://localhost:8080/api/students/bin GET
     @GetMapping("/bin")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<StudentInfoResponse>>> getAllDeletedStudent() {
-    		List<Student> deletedList = service.getBin();
+    		List<Student> deletedList = stuService.getBin();
     		
-    		//map into dto
-    		List<StudentInfoResponse> responseList = deletedList.stream()
-    	            .map(s -> new StudentInfoResponse(s.getStudentId(), s.getFullName()))
-    	            .collect(Collectors.toList());
+   
+    		List<StudentInfoResponse> responseList = stuMapper.toResponseList(deletedList);
     		
     		ApiResponse<List<StudentInfoResponse>> responseBody = new ApiResponse<>(
 											    	            LocalDateTime.now(),
@@ -111,7 +107,7 @@ public class StudentController {
 											    	            "Danh sách sinh viên đã xóa",
 											    	            responseList);
     		
-    		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+    		return ResponseEntity.ok(responseBody);
   
     }
 	
@@ -119,16 +115,16 @@ public class StudentController {
 	@GetMapping("/{id}")
 	//PathVariable is used to get variable from url
 	public ResponseEntity<ApiResponse<StudentInfoResponse>> findStudent(@PathVariable String id) {
-		Student student = service.getById(id);
+		Student student = stuService.getById(id);
 		
-		StudentInfoResponse responseData = new StudentInfoResponse(student.getStudentId(), student.getFullName());
+		StudentInfoResponse responseData = stuMapper.toResponse(student);
 		
 		ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<>(
 				                                              LocalDateTime.now(), 
 				                                              200, 
 				                                              "Đã tìm thấy sinh viên có " + id + " !", 
 				                                              responseData);
-		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+		return ResponseEntity.ok(responseBody);
 }
 	
     // http://localhost:8080/api/students/add_student POST
@@ -144,9 +140,9 @@ public class StudentController {
     	 * 
     	 * Context: API return HTTP response include type of DTO (StudentResponse has Student type)
     	 */
-    		Student newStudent = registrationService.registerStudent(dtoStu);
+    		Student newStudent = stuService.add(dtoStu);
     		
-    		StudentInfoResponse responseData = new StudentInfoResponse(newStudent.getStudentId(), newStudent.getFullName());
+    		StudentInfoResponse responseData = stuMapper.toResponse(newStudent);
 			
 			ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<StudentInfoResponse>
 															(LocalDateTime.now(), 
@@ -164,58 +160,58 @@ public class StudentController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentInfoResponse>> modifyStudent(@PathVariable String id, 
 			@RequestBody @Valid ModifyStudentRequest dtoMod) {
-			Student reStudent = service.modify(id, dtoMod);
+			Student reStudent = stuService.modify(id, dtoMod);
 			
-			StudentInfoResponse responseData = new StudentInfoResponse(reStudent.getStudentId(), reStudent.getFullName());
+			StudentInfoResponse responseData = stuMapper.toResponse(reStudent);
 			
 			ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<>(
 																LocalDateTime.now(), 
 																200, 
 																"Cập nhật sinh viên " + id + " thành công", 
 																responseData);
-			return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+			return ResponseEntity.ok(responseBody);
 }
     
     //http://localhost:8080/api/students/1 DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable String id) {
-		service.delete(id);
+    	stuService.delete(id);
 		
 		ApiResponse<Void> responseBody = new ApiResponse<>(
 				                                          LocalDateTime.now(), 
 				                                          200, 
 				                                          "Đã xóa sinh viên với id = " + id + " thành công");
-		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+		return ResponseEntity.ok(responseBody);
 }
     
     //http://localhost:8080/api/students/ DELETE
     @DeleteMapping("/delete_all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteAllStudent() {
-		service.deleteAll();
+    	stuService.deleteAll();
 		
 		ApiResponse<Void> responseBody = new ApiResponse<>(
 				                                          LocalDateTime.now(), 
 				                                          200, 
 				                                          "Đã xóa toàn bộ danh sách sinh viên.");
-		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+		return ResponseEntity.ok(responseBody);
 }
     
  // http://localhost:8080/api/students/restore/SV001 PATCH
     @PatchMapping("/restore/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentInfoResponse>> restoreStudent(@PathVariable String id) {
-        service.restore(id);
-        Student restoredStudent = service.getById(id);
+    	stuService.restore(id);
+        Student restoredStudent = stuService.getById(id);
 
-		StudentInfoResponse responseData = new StudentInfoResponse(restoredStudent.getStudentId(), restoredStudent.getFullName());
+		StudentInfoResponse responseData = stuMapper.toResponse(restoredStudent);
 
         ApiResponse<StudentInfoResponse> responseBody = new ApiResponse<>(
         		                                            LocalDateTime.now(), 
         		                                            200, 
         		                                            "Khôi phục sinh viên " + id + " thành công!", 
         		                                            responseData);
-        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+        return ResponseEntity.ok(responseBody);
 }
 }

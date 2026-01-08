@@ -1,6 +1,5 @@
 package com.example.learn_spring_framework.model;
 
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.CascadeType;
@@ -31,7 +30,7 @@ public class Student {
 	private boolean deleted = false;
 	
 	
-	@OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH, CascadeType.REFRESH}) //When you save Student -> save User
+	@OneToOne(cascade = {CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH}) //When you save Student -> save User
 	@JoinColumn(name = "id", referencedColumnName = "id") //reference key in Student, column name id
 	//id of Student will reference to id of user
 	private User user;

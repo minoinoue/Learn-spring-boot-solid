@@ -1,5 +1,7 @@
 package com.example.learn_spring_framework.model;
 
+import com.example.learn_spring_framework.enums.ERole;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

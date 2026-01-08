@@ -1,23 +1,19 @@
-package com.example.learn_spring_framework.service;
+package com.example.learn_spring_framework.service.impl;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
-import com.example.learn_spring_framework.model.ERole;
-import com.example.learn_spring_framework.model.Role;
+
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.model.User;
-import com.example.learn_spring_framework.repository.IRoleRepository;
 import com.example.learn_spring_framework.repository.IStudentRepository;
-import com.example.learn_spring_framework.repository.IUserRepository;
+import com.example.learn_spring_framework.service.IStudentService;
+import com.example.learn_spring_framework.service.IUserService;
 
 import jakarta.persistence.NoResultException;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
  * exceptions.
  */
 @Service
-public class StudentService {
+public class StudentServiceImpl implements IStudentService{
 	
 	private final IStudentRepository stuRepo;
-	private final UserService userService;
+	private final IUserService userService;
 	
 	
 	/* Autowired is annotation for dependency injection to connect beans
@@ -46,16 +42,18 @@ public class StudentService {
 	 * -> Service -> Controller -> SpringApplicationApp.run
 	 */
 	@Autowired
-	public StudentService (UserService userService, IStudentRepository stuRepo) {
+	public StudentServiceImpl (IUserService userService, IStudentRepository stuRepo) {
 		this.stuRepo = stuRepo;
 		this.userService = userService;
 	}
 	
+	@Override
 	public List<Student> getAllStudent(){
 		List<Student> allStudent = stuRepo.findAll();
 		return allStudent;
 	}
 	
+	@Override
 	public Student getById(String studentId) {
 		Optional<Student> getStudent = stuRepo.findById(studentId);
 		if(getStudent.isEmpty())
@@ -63,20 +61,20 @@ public class StudentService {
 		return getStudent.get(); //get the object in Optional's box
 	}
 	
+	@Override
 	@Transactional
-	public Student add(AddStudentRequest dtoStu, User savedUser) {
+	public Student add(AddStudentRequest dtoStu) {
 		
-		String newStudentId = dtoStu.getNewStudentId();
-		if(stuRepo.existsById(newStudentId))
-			throw new IllegalStateException("Mã sinh viên đã tồn tại!");
-		
-		String newStudentName = dtoStu.getNewStudentName();
+		if(stuRepo.existsById(dtoStu.getNewStudentId()))
+            throw new IllegalStateException("Mã sinh viên đã tồn tại!");
+
+        User newUser = userService.createStudentUser(dtoStu.getUserName(), dtoStu.getPassword());
         
-		Student newStudent = new Student(newStudentId, newStudentName, savedUser);
-		
-		return stuRepo.save(newStudent);
+        Student newStudent = new Student(dtoStu.getNewStudentId(), dtoStu.getNewStudentName(), newUser);
+        return stuRepo.save(newStudent);
 	}
 	
+	@Override
 	@Transactional
 	public Student modify(String studentId, ModifyStudentRequest dtoMod) {
 		String newStudentName = dtoMod.getNewStudentName();
@@ -91,10 +89,12 @@ public class StudentService {
 		return stuRepo.save(existingStudent);
 	}
 	
+	@Override
 	public List<Student> getBin(){
 		return stuRepo.findAllDeletedStudent();
 	}
 	
+	@Override
 	@Transactional
 	public void delete(String studentId) {
 		Student existingStudent = getById(studentId);
@@ -102,14 +102,20 @@ public class StudentService {
 		stuRepo.save(existingStudent);
 	}
 	
+	@Override
+	@Transactional
 	public void deleteAll() {
-		stuRepo.deleteAll();
+		stuRepo.softDeleteAllStudents();
 	}
 	
+	@Override
 	@Transactional
 	public void restore(String studentId) {
-		Student deletedStudent = stuRepo.findDeletedStudentById(studentId);
-				deletedStudent.setDeleted(false);
-				stuRepo.save(deletedStudent);
+		Optional<Student> deletedStudent = stuRepo.findStudentByStudentIdAndDeleted(studentId, true);
+		if(deletedStudent.isEmpty())
+			throw new NoResultException("Không tìm thấy sinh viên " + studentId + " trong danh sách bị xóa.");
+				Student deletedStu = deletedStudent.get();
+				deletedStu.setDeleted(false);
+				stuRepo.save(deletedStu);
 	}
 }

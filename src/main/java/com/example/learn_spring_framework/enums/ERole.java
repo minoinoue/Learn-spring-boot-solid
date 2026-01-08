@@ -1,4 +1,4 @@
-package com.example.learn_spring_framework.model;
+package com.example.learn_spring_framework.enums;
 
 /*
  * Special type to define constants have names and stable.
