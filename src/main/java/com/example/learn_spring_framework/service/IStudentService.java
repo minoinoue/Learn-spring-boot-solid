@@ -2,13 +2,15 @@ package com.example.learn_spring_framework.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
 import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
 import com.example.learn_spring_framework.model.Student;
 
 public interface IStudentService {
 	
-	List<Student> getAllStudent();
+	Page<Student> getAllStudent(int page, int size, String sortBy, String sortDir);
 	
 	Student getById(String studentId);
 	

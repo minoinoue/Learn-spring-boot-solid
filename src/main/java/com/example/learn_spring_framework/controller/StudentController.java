@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
@@ -22,6 +24,7 @@ import com.example.learn_spring_framework.dto.request.ModifyStudentRequest;
 import com.example.learn_spring_framework.dto.response.StudentInfoResponse;
 import com.example.learn_spring_framework.mapper.IStudentMapper;
 import com.example.learn_spring_framework.dto.response.ApiResponse;
+import com.example.learn_spring_framework.dto.response.PageResponse;
 import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.service.IStudentService;
 
@@ -71,9 +74,19 @@ public class StudentController {
 	}
 
 	// http://localhost:8080/api/students GET
+	//GET /api/students?sortBy=studentId&sortDir=desc -> desc sort by studentID 
+	//GET /api/students?sortBy=studentId&sortDir=asc -> asc sort by studentID 
 	@GetMapping
-	public ResponseEntity<ApiResponse<List<StudentInfoResponse>>> showStudent() {
-			List<Student> dsach = stuService.getAllStudent();
+	public ResponseEntity<ApiResponse<PageResponse<StudentInfoResponse>>> showStudent(
+			@RequestParam(defaultValue = "1") int page,  // default page 1
+            @RequestParam(defaultValue = "10") int size,  // default 10 items in 1 page
+            @RequestParam(defaultValue = "fullName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir //default ascending
+			) {
+		
+		int currentPage = (page < 1) ? 1 : page;
+		
+		Page<Student> dsach = stuService.getAllStudent(currentPage, size, sortBy, sortDir);
 			/*
 			 * stream() is a flexible way to process collections of object like mapping, reducing, sorting
 			 * 
@@ -81,13 +94,21 @@ public class StudentController {
 			 * 
 			 * collect(Collectors.toList()) returns result stream into List
 			 */
-			List<StudentInfoResponse> dsachList = stuMapper.toResponseList(dsach);
+			List<StudentInfoResponse> dsachList = stuMapper.toResponseList(dsach.getContent());
 			
-			ApiResponse<List<StudentInfoResponse>> responseBody = new ApiResponse<List<StudentInfoResponse>>
+			PageResponse<StudentInfoResponse> pageResponse = new PageResponse<>(
+	                currentPage,
+	                size,
+	                dsach.getTotalElements(),
+	                dsach.getTotalPages(),
+	                dsachList
+	        );
+			
+			ApiResponse<PageResponse<StudentInfoResponse>> responseBody = new ApiResponse<PageResponse<StudentInfoResponse>>
 																						(LocalDateTime.now(),
 																						200,
 																						"Lấy danh sách thành công",
-																						dsachList);
+																						pageResponse);
 			
 			return ResponseEntity.ok(responseBody); 
 	}
