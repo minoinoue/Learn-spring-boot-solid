@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.learn_spring_framework.dto.request.AddStudentRequest;
@@ -48,9 +52,17 @@ public class StudentServiceImpl implements IStudentService{
 	}
 	
 	@Override
-	public List<Student> getAllStudent(){
-		List<Student> allStudent = stuRepo.findAllByDeletedFalse();
-		return allStudent;
+	public Page<Student> getAllStudent(int page, int size, String sortBy, String sortDir){
+		
+		//if client send "desc" -> descending, else ascending
+		Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+		
+		//create sort object 
+		Sort sort = Sort.by(direction, sortBy);
+		
+		//create obj page request
+		Pageable pageable = PageRequest.of(page - 1, size, sort);
+		return stuRepo.findAllByDeletedFalse(pageable);
 	}
 	
 	@Override
