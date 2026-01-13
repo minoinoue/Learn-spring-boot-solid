@@ -66,6 +66,18 @@ public class StudentServiceImpl implements IStudentService{
 	}
 	
 	@Override
+	public Page<Student> getAllContainingStudent(int page, int size, String keyword, String sortBy, String sortDir){
+		
+		Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+		
+		Sort sort = Sort.by(direction, sortBy);
+		
+		Pageable pageable = PageRequest.of(page - 1, size, sort);
+		
+		return stuRepo.findByFullNameContainingIgnoreCaseAndDeletedFalse(keyword, pageable);
+	}
+	
+	@Override
 	public Student getById(String studentId) {
 		Optional<Student> getStudent = stuRepo.findByStudentIdAndDeletedFalse(studentId);
 		if(getStudent.isEmpty())

@@ -5,9 +5,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -63,14 +65,17 @@ import java.time.LocalDateTime;
 @RestController 
 @RequestMapping("/api/students") //default URL for controller
 public class StudentController {
+
+    private final AuthenticationManager authenticationManager;
 	
 	private final IStudentService stuService;
 	private final IStudentMapper stuMapper;
 	
 	@Autowired
-	public StudentController(IStudentService stuService, IStudentMapper stuMapper) {
+	public StudentController(IStudentService stuService, IStudentMapper stuMapper, AuthenticationManager authenticationManager) {
 		this.stuService = stuService;
 		this.stuMapper = stuMapper;
+		this.authenticationManager = authenticationManager;
 	}
 
 	// http://localhost:8080/api/students GET
@@ -87,13 +92,6 @@ public class StudentController {
 		int currentPage = (page < 1) ? 1 : page;
 		
 		Page<Student> dsach = stuService.getAllStudent(currentPage, size, sortBy, sortDir);
-			/*
-			 * stream() is a flexible way to process collections of object like mapping, reducing, sorting
-			 * 
-			 * map method each object in List<Student> sang List<StudentItemResponse>
-			 * 
-			 * collect(Collectors.toList()) returns result stream into List
-			 */
 			List<StudentInfoResponse> dsachList = stuMapper.toResponseList(dsach.getContent());
 			
 			PageResponse<StudentInfoResponse> pageResponse = new PageResponse<>(
@@ -111,6 +109,42 @@ public class StudentController {
 																						pageResponse);
 			
 			return ResponseEntity.ok(responseBody); 
+	}
+	//GET http://localhost:8080/api/students/Đạt?sortBy=studentId&sortDir=desc
+	@GetMapping("/search/{keyword}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<ApiResponse<PageResponse<StudentInfoResponse>>> showContainingStudent(
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int size,
+			@PathVariable String keyword,
+			@RequestParam(defaultValue = "studentId") String sortBy,
+			@RequestParam(defaultValue = "asc") String sortDir
+			) {
+		
+		int currentPage = (page < 1) ? 1 : page;
+		
+		Page<Student> dsach = stuService.getAllContainingStudent(currentPage, size, keyword, sortBy, sortDir);
+		
+		//Slice<Student> dsach = stuService.getAllContainingStudent(currentPage, size, keyword, sortBy, sortDir);
+		//Slice dùng khi cần tải thêm dữ liệu khi cuộn xuống mà không cần biết còn phần tử hay không
+		//Page dùng khi cần hiển thị số trang và thông tin tổng quan về phân trang trong UI
+		List<StudentInfoResponse> dsachList = stuMapper.toResponseList(dsach.getContent());
+		
+		PageResponse<StudentInfoResponse> pageResponse = new PageResponse<>(
+					currentPage,
+					size,
+					dsach.getTotalElements(),
+					dsach.getTotalPages(),
+					dsachList
+				);
+		
+				ApiResponse<PageResponse<StudentInfoResponse>> responseBody = new ApiResponse<PageResponse<StudentInfoResponse>>
+																				(LocalDateTime.now(),
+																				200,
+																				"Lấy danh sách thành công",
+																				pageResponse);
+				
+				return ResponseEntity.ok(responseBody);
 	}
 	
 	// http://localhost:8080/api/students/bin GET

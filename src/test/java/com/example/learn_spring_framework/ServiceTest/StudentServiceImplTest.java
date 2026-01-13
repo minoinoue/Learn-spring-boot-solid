@@ -1,4 +1,4 @@
-package com.example.learn_spring_framework.ServiceTest;
+package com.example.learn_spring_framework.serviceTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,14 +32,12 @@ import jakarta.persistence.NoResultException;
 @ExtendWith(MockitoExtension.class)
 public class StudentServiceImplTest {
 	
-	@Mock
-	IStudentRepository stuRepo;
+	@Mock private IStudentRepository stuRepo;
 	
-	@Mock
-	IUserService userService;
+	@Mock private IUserService userService;
 	
-	@InjectMocks
-	StudentServiceImpl stuService;
+	@InjectMocks 
+	private StudentServiceImpl stuService;
 	
 	@Test
 	@DisplayName("Test getAllStudent: must return a Page hold a list of students")
@@ -66,7 +64,7 @@ public class StudentServiceImplTest {
 		Student mockStudent = new Student();
 		mockStudent.setStudentId(id);
 		mockStudent.setFullName("Phùng Tuấn Đạt");
-		
+
 		when(stuRepo.findByStudentIdAndDeletedFalse(id)).thenReturn(Optional.of(mockStudent));
 		
 		// Act
@@ -118,6 +116,26 @@ public class StudentServiceImplTest {
 		verify(userService).createStudentUser("htp", "htp@123");
 		
 		verify(stuRepo).save(any(Student.class));
+	}
+	
+	@Test
+	@DisplayName("Test add: exists id must return IllegalStateException")
+	void addStudent_whenExistsId_shouldReturnIllegalStateException() {
+		AddStudentRequest request = new AddStudentRequest();
+		request.setNewStudentId("SV002");
+		request.setNewStudentName("Huỳnh Thanh Phong");
+		request.setPassword("htp@123");
+		request.setUserName("htp");
+		
+		User mockUser = new User();
+		mockUser.setUserName(request.getUserName());
+		
+		when(stuRepo.existsById("SV002")).thenReturn(true);
+		
+		assertThrows(IllegalStateException.class, () -> {
+			stuService.add(request);
+		});
+		
 	}
 	
 	@Test
