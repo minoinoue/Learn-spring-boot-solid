@@ -92,10 +92,4 @@ public class Student {
 	public void setDeleted(boolean deleted) {
 		this.deleted = deleted;
 	}
-
-	@Override
-	public String toString() {
-		return "Mã sinh viên: " + studentId + " | Họ và tên sinh viên: " + fullName + " | Username: " + user.getUserName();
-	}
-	
 }

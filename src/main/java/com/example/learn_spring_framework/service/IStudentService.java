@@ -12,6 +12,8 @@ public interface IStudentService {
 	
 	Page<Student> getAllStudent(int page, int size, String sortBy, String sortDir);
 	
+	Page<Student> getAllContainingStudent(int page, int size, String keyword, String sortBy,  String sortDir);
+	
 	Student getById(String studentId);
 	
 	Student add(AddStudentRequest dtoStu);
