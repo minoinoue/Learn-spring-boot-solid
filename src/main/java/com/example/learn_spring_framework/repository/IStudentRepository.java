@@ -29,14 +29,14 @@ import jakarta.transaction.Transactional;
 public interface IStudentRepository extends JpaRepository<Student, String> {
 		Page<Student> findAllByDeletedFalse(Pageable pageable);
 		
+		//find by fullname have keyword and ignore case
+		Page<Student> findByFullNameContainingIgnoreCaseAndDeletedFalse(String keyword, Pageable pageable);
+		
 		List<Student> findAllByDeletedTrue();
 		
 		Optional<Student> findByStudentIdAndDeletedFalse(String studentId);
 		
 		Optional<Student> findStudentByStudentIdAndDeleted(String studentId, boolean deleted);
-		
-		//find by fullname have keyword and ignore case
-		Page<Student> findByFullNameContainingIgnoreCaseAndDeletedFalse(String keyword, Pageable pageable);
 		
 		@Modifying
 		@Transactional

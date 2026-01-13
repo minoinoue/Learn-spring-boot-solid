@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  # database service
+  db:
+    image: postgres:15
+    container_name: spring_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: tuandat29052004
+      POSTGRES_DB: student_db
+    ports:
+      - "5432:5432"
+
+  #spring boot app
+  app:
+    build: .
+    container_name: spring_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # override configuration in application.properties to connect to container_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/student_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: tuandat29052004  
