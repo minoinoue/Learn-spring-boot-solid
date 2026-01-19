@@ -45,6 +45,9 @@ public class JWTUtil {
 	@Value("${jwt.expiration}")
 	private int jwtExpirationsMs;
 	
+	@Value("${jwt.refreshExpiration}")
+	private Long refreshTokenDurationMs;
+	
 	private SecretKey key; //hold secret key after encode to sign and decode
 	/*
 	 * initializes the key after the class is instantiated and the jwtSecret
@@ -89,6 +92,8 @@ public class JWTUtil {
 	 * if token was expired or changed -> throw exceptions
 	 * 
 	 */
+	
+	
 	public void validateJwtToken(String token) {
 		try {
 		Jwts.parserBuilder().setSigningKey(key).build()
@@ -104,5 +109,9 @@ public class JWTUtil {
 		} catch (IllegalArgumentException e) {
 			throw new InvalidJwtException("Token rỗng hoặc lỗi tham số (Illegal Argument)", e);
 		}
+	}
+
+	public Long getRefreshTokenDurationMs() {
+		return refreshTokenDurationMs;
 	}
 }

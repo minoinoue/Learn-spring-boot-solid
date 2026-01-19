@@ -29,6 +29,15 @@ CREATE TABLE students (
     CONSTRAINT fk_student_user FOREIGN KEY (id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+--refreshtoken
+CREATE TABLE refreshtoken (
+    id BIGSERIAL PRIMARY KEY, 
+    token VARCHAR(255) NOT NULL UNIQUE, 
+    expiry_date TIMESTAMP NOT NULL,
+    user_id BIGINT,
+    CONSTRAINT fk_refresh_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 INSERT INTO roles (role)
 SELECT 'ROLE_ADMIN'
 WHERE NOT EXISTS (

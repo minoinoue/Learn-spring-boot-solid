@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +24,21 @@ public class IUserRepositoryTest {
 	//Helper to work with entities in test
 	@Autowired private TestEntityManager entityManager;
 	
+	private User userA;
+	private User userB;
+	
+	@BeforeEach
+	void setUp() {
+		userA = new User("A", "pass123", Set.of());
+		userB = new User("B", "pass123", Set.of());
+		userRepository.save(userA); //use for insert & update
+		userRepository.save(userB);
+	}
+	
 	@Test
-	@DisplayName("find by user name: return user successfully!")
+	@DisplayName("find by user name should return user successfully")
 	void findByUserName_shouldReturnUser() {
-		User user = new User("A", "pass123", Set.of());
-		entityManager.persist(user); //save a new entity object that managed by JPA
+		//entityManager.persist(userA); save a new entity object that managed by JPA (only for insert)
 		entityManager.flush(); //update changes (insert, update, delete) from RAM to database instead of rollback
 		
 	
@@ -38,12 +49,11 @@ public class IUserRepositoryTest {
 	}
 	
 	@Test
-	@DisplayName("exists by user name: return true if exists!")
+	@DisplayName("exists by user name must return true if exists")
     void existsByUserName_shoudReturnsTrueIfExists() {
-        User user = new User("B", "pass123", Set.of());
-        entityManager.persist(user);
+        //entityManager.persist(userB);
 
         assertThat(userRepository.existsByUserName("B")).isTrue();
-        assertThat(userRepository.existsByUserName("A")).isFalse();
+        assertThat(userRepository.existsByUserName("C")).isFalse();
     }
 }

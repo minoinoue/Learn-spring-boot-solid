@@ -15,4 +15,6 @@ public interface IUserService {
 	User modifyUser(User user, String newUserName, String newPassword);
 	
 	UserDetails loadUserByUsername(String username);
+	
+	User findByUserName(String username);
 }

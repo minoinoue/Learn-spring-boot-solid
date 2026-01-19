@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyString;
 
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,9 +29,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.learn_spring_framework.dto.request.LoginRequest;
 import com.example.learn_spring_framework.dto.response.LoginResponse;
 import com.example.learn_spring_framework.enums.ERole;
+import com.example.learn_spring_framework.model.RefreshToken;
 import com.example.learn_spring_framework.model.Role;
 import com.example.learn_spring_framework.model.User;
 import com.example.learn_spring_framework.repository.IUserRepository;
+import com.example.learn_spring_framework.service.IRefreshTokenService;
 import com.example.learn_spring_framework.service.IRolesService;
 import com.example.learn_spring_framework.service.impl.UserServiceImpl;
 import com.example.learn_spring_framework.util.JWTUtil;
@@ -38,6 +43,7 @@ public class UserServiceImplTest {
 	
 	@Mock private IUserRepository userRepo;
     @Mock private IRolesService rolesService;
+    @Mock private IRefreshTokenService rtService;
     @Mock private AuthenticationManager authenticationManager;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JWTUtil jwtUtils;
@@ -54,6 +60,7 @@ public class UserServiceImplTest {
     	studentRole.setName(ERole.ROLE_STUDENT);
     	
     	sampleUser = new User("username", "encoded_pass", Set.of(studentRole));
+    	sampleUser.setId(1L);
     }
     
 	@Test
@@ -75,9 +82,10 @@ public class UserServiceImplTest {
 		
 		when(userRepo.findByUserName("notfound")).thenReturn(Optional.empty());
 		
-		assertThrows(UsernameNotFoundException.class, () -> {
-			userService.loadUserByUsername("notfound");
-		});
+		UsernameNotFoundException ex = assertThrows(UsernameNotFoundException.class, () ->
+			userService.loadUserByUsername("notfound"));
+		
+		assertThat(ex.getMessage()).isEqualTo("Tên đăng nhập hoặc mật khẩu bị sai!");
 	}
 	
 	@Test
@@ -111,24 +119,62 @@ public class UserServiceImplTest {
 		// Arrange
         LoginRequest request = new LoginRequest();
         request.setPassword("password");
-        request.setUserName("testuser");
+        request.setUserName("username");
         Authentication auth = mock(Authentication.class);
         UserDetails userDetails = org.springframework.security.core.userdetails.User
-                .withUsername("testuser")
-                .password("pass")
+                .withUsername("username")
+                .password("encoded_pass")
                 .authorities("ROLE_STUDENT")
                 .build();
+        
+        RefreshToken mockRefreshToken = new RefreshToken();
+        mockRefreshToken.setToken("refresh_token_string");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
         when(auth.getPrincipal()).thenReturn(userDetails);
-        when(jwtUtils.generateToken("testuser")).thenReturn("mocked_token");
+        when(jwtUtils.generateToken("username")).thenReturn("jwt_access_token");
+        when(userRepo.findByUserName("username")).thenReturn(Optional.of(sampleUser));
+        when(rtService.createRefreshToken(anyLong())).thenReturn(mockRefreshToken);
+  
 
         // Act
         LoginResponse response = userService.login(request);
 
         // Assert
-        assertThat(response.getToken()).isEqualTo("mocked_token");
-        assertThat(response.getUsername()).isEqualTo("testuser");
+        assertThat(response.getToken()).isEqualTo("jwt_access_token");
+        assertThat(response.getRefreshToken()).isEqualTo("refresh_token_string");
+        assertThat(response.getUsername()).isEqualTo("username");
         assertThat(response.getRoles()).contains("ROLE_STUDENT");
+    }
+	
+	@Test
+    @DisplayName("modify user successfullt")
+    void modifyUser_shouldModifySuccessfully() {
+        when(userRepo.existsByUserName("new_name")).thenReturn(false);
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+        when(passwordEncoder.encode("new_pass")).thenReturn("new_encoded_pass");
+        when(userRepo.save(any(User.class))).thenReturn(sampleUser);
+
+        User modified = userService.modifyUser(sampleUser, "new_name", "new_pass");
+
+        assertThat(modified.getUserName()).isEqualTo("new_name");
+        assertThat(modified.getPassword()).isEqualTo("new_encoded_pass");
+    }
+	
+	@Test
+    @DisplayName("Modify user: error same old password")
+    void modifyUser_SamePassword_ShouldThrowException() {
+        when(passwordEncoder.matches("old_pass", sampleUser.getPassword())).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, 
+            () -> userService.modifyUser(sampleUser, "username", "old_pass"));
+    }
+
+    @Test
+    @DisplayName("Modify user: not found user")
+    void findByUserName_NotFound_ShouldThrowBadCredentials() {
+        when(userRepo.findByUserName("unknown")).thenReturn(Optional.empty());
+
+        assertThrows(UsernameNotFoundException.class, () -> userService.findByUserName("unknown"));
     }
 }
