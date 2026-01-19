@@ -1,4 +1,4 @@
-#use auth image jdk to run application
+#specify where the image we want to create originates from
 FROM eclipse-temurin:17-jdk-alpine
 
 # set working file inside container

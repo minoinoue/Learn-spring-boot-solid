@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -78,7 +79,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 			}
 			filterChain.doFilter(request, response);
 			//move request to next filter or to controller to handle
-		} catch (InvalidJwtException e) {
+		} catch (InvalidJwtException | BadCredentialsException e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 	        response.setContentType("application/json;charset=UTF-8");
 	        ApiResponse<Void> errorResponse = new ApiResponse<Void>(

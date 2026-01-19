@@ -12,13 +12,14 @@ public class LoginResponse {
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
 	private LocalDateTime timestamp;
     private String token;
+    private String refreshToken;
     private String username;
     private List<String> roles; 
-    
 
-    public LoginResponse(LocalDateTime timestamp, String token, String username, List<String> roles) {
+    public LoginResponse(LocalDateTime timestamp, String token, String refreshToken, String username, List<String> roles) {
         this.timestamp = timestamp;
     	this.token = token;
+    	this.refreshToken = refreshToken;
         this.username = username;
         this.roles = roles;
     }
@@ -41,4 +42,14 @@ public class LoginResponse {
 
     public List<String> getRoles() { return roles; }
     public void setRoles(List<String> roles) { this.roles = roles; }
+
+
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+
+
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
+	}
 }

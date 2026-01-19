@@ -36,10 +36,15 @@ public class IStudentRepositoryTest {
 
         studentRepository.save(student1);
         studentRepository.save(student2);
+        /*using H2 test in RAM
+         * 
+         * -> Test the repository to see if the query is being executed correctly.
+         * + can check SQL error, ensure data integrity when downloaded and retrieved
+         */
     }
 
     @Test
-    @DisplayName("Find all active student")
+    @DisplayName("Find all active student successful")
     void findAllByDeletedFalse_shouldReturnActiveStudents() {
         // Arrange
         Pageable pageable = PageRequest.of(0, 10);
@@ -53,7 +58,7 @@ public class IStudentRepositoryTest {
     }
 
     @Test
-    @DisplayName("find by full name containing and not deleted")
+    @DisplayName("find by full name containing and not deleted successful")
     void findByFullNameContaining_shouldReturnMatchingStudents() {
         // Act
         Page<Student> result = studentRepository
@@ -65,7 +70,7 @@ public class IStudentRepositoryTest {
     }
 
     @Test
-    @DisplayName("find student by id and not deleted")
+    @DisplayName("find student by id and not deleted successful")
     void findByStudentIdAndDeletedFalse_shouldReturnStudent() {
         // Act
         Optional<Student> found = studentRepository.findByStudentIdAndDeletedFalse("SV001");
@@ -76,7 +81,7 @@ public class IStudentRepositoryTest {
     }
 
     @Test
-    @DisplayName("test soft deleted all")
+    @DisplayName("test soft deleted all successful")
     void softDeleteAllStudents_shouldUpdateAllToDeleted() {
         // Act
         studentRepository.softDeleteAllStudents();

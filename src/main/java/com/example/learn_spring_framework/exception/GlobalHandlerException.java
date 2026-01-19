@@ -67,7 +67,7 @@ public class GlobalHandlerException {
 	@ExceptionHandler(BadCredentialsException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ApiResponse<Void> handleBadCredential(BadCredentialsException ex) {
-		return new ApiResponse<Void>(LocalDateTime.now(), 401, "Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.");
+		return new ApiResponse<Void>(LocalDateTime.now(), 401, "Tên đăng nhập hoặc mật khẩu sai!");
 	}
 	
 	@ExceptionHandler(DisabledException.class) 

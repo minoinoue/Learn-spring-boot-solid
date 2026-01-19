@@ -1,15 +1,12 @@
 package com.example.learn_spring_framework.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -66,16 +63,13 @@ import java.time.LocalDateTime;
 @RequestMapping("/api/students") //default URL for controller
 public class StudentController {
 
-    private final AuthenticationManager authenticationManager;
-	
 	private final IStudentService stuService;
 	private final IStudentMapper stuMapper;
 	
 	@Autowired
-	public StudentController(IStudentService stuService, IStudentMapper stuMapper, AuthenticationManager authenticationManager) {
+	public StudentController(IStudentService stuService, IStudentMapper stuMapper) {
 		this.stuService = stuService;
 		this.stuMapper = stuMapper;
-		this.authenticationManager = authenticationManager;
 	}
 
 	// http://localhost:8080/api/students GET
@@ -110,13 +104,13 @@ public class StudentController {
 			
 			return ResponseEntity.ok(responseBody); 
 	}
-	//GET http://localhost:8080/api/students/Đạt?sortBy=studentId&sortDir=desc
-	@GetMapping("/search/{keyword}")
+	//GET http://localhost:8080/api/students/search?sortBy=studentId&sortDir=desc&keyword=Đạt
+	@GetMapping("/search")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<ApiResponse<PageResponse<StudentInfoResponse>>> showContainingStudent(
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size,
-			@PathVariable String keyword,
+			@RequestParam String keyword,
 			@RequestParam(defaultValue = "studentId") String sortBy,
 			@RequestParam(defaultValue = "asc") String sortDir
 			) {

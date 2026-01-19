@@ -3,12 +3,14 @@ package com.example.learn_spring_framework.service.impl;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,9 +23,12 @@ import org.springframework.stereotype.Service;
 import com.example.learn_spring_framework.dto.request.LoginRequest;
 import com.example.learn_spring_framework.dto.response.LoginResponse;
 import com.example.learn_spring_framework.enums.ERole;
+import com.example.learn_spring_framework.model.RefreshToken;
 import com.example.learn_spring_framework.model.Role;
+import com.example.learn_spring_framework.model.Student;
 import com.example.learn_spring_framework.model.User;
 import com.example.learn_spring_framework.repository.IUserRepository;
+import com.example.learn_spring_framework.service.IRefreshTokenService;
 import com.example.learn_spring_framework.service.IRolesService;
 import com.example.learn_spring_framework.service.IUserService;
 import com.example.learn_spring_framework.util.JWTUtil;
@@ -40,18 +45,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserDetailsService, IUserService {
 	private final IUserRepository userRepo;
 	private final IRolesService rolesService;
+	private final IRefreshTokenService rtService;
 	private final AuthenticationManager authenticationManager;
 	private final PasswordEncoder passwordEncoder;
 	private final JWTUtil jwtUtils;
 	
 	//@Lazy: Beans won't create AuthenticationManager until beans call it.
 	@Autowired
-	public UserServiceImpl(IUserRepository userRepo, @Lazy AuthenticationManager authenticationManager, JWTUtil jwtUtils, IRolesService rolesService, PasswordEncoder passwordEncoder) {
+	public UserServiceImpl(IUserRepository userRepo, @Lazy AuthenticationManager authenticationManager, JWTUtil jwtUtils, IRolesService rolesService, PasswordEncoder passwordEncoder, IRefreshTokenService rtService) {
 		this.userRepo = userRepo;
 		this.authenticationManager = authenticationManager;
 		this.jwtUtils = jwtUtils;
 		this.rolesService = rolesService;
 		this.passwordEncoder = passwordEncoder;
+		this.rtService = rtService;
 	}
 	
 	@Override
@@ -75,6 +82,9 @@ public class UserServiceImpl implements UserDetailsService, IUserService {
 
         //Create token
         String jwtToken = jwtUtils.generateToken(userDetails.getUsername());
+        
+        User user = findByUserName(userDetails.getUsername());
+        RefreshToken jwtRefreshToken = rtService.createRefreshToken(user.getId());
 
        //transform Set<Role> into List<GrantedAuthority>
         List<String> roles = (List<String>) userDetails.getAuthorities().stream()
@@ -84,6 +94,7 @@ public class UserServiceImpl implements UserDetailsService, IUserService {
         return new LoginResponse(
                 LocalDateTime.now(),
                 jwtToken,
+                jwtRefreshToken.getToken(),
                 userDetails.getUsername(),
                 roles
         );
@@ -121,12 +132,22 @@ public class UserServiceImpl implements UserDetailsService, IUserService {
     	
     	return userRepo.save(user);
     }
+	
+	@Override
+	public User findByUserName(String username) {
+		return userRepo.findByUserName(username)
+				.orElseThrow(() -> new UsernameNotFoundException("Tên đăng nhập hoặc mật khẩu bị sai!"));
+	}
     
 	@Override
 	public UserDetails loadUserByUsername(String username) {
-				User user = userRepo.findByUserName(username)
-				 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản " + username));
+				User user = findByUserName(username);
 				 
+				Student student = user.getStudent();
+				
+				if(student != null && student.isDeleted()) {
+					throw new BadCredentialsException("Tên đăng nhập hoặc mật khẩu sai!");
+				}
 				
 				List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
 		                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
@@ -137,7 +158,7 @@ public class UserServiceImpl implements UserDetailsService, IUserService {
 		                user.getUserName(),           // get username in DB
 		                user.getPassword(),           // get password Bcrypt in DB
 		                authorities
-		                /*user.getRoles() in database
+		                /*user.getRoles() in daabase
 		                 *new SimpleGrantedAuthority -> map string "STUDENT" into SimpleGrantedAuthority object -> 
 		                 * 
 		                 * Collections.singletonList(...) 1 users can have many roles -> List/Collection

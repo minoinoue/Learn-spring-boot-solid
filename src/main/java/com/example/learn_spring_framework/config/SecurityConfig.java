@@ -88,7 +88,7 @@ public class SecurityConfig{
 			.authorizeHttpRequests((requests) -> requests 
 					/*Start to configure AuthZ for HTTP requests
 					 */
-					.requestMatchers("/api/auth/**").permitAll()
+					.requestMatchers("/api/auth/signin", "/api/auth/refresh-token").permitAll()
 					/* Choose requests that send to main page (/) or (/index)
 					 * 
 					 * permitAll(): allow everyone
@@ -96,6 +96,7 @@ public class SecurityConfig{
 					 * -> Purpose: Public this site, customer do not need to sign in to access this site
 					 * Using for login page or loading page 
 					 */
+					.requestMatchers("/api/auth/logout").authenticated()
 					.anyRequest().authenticated()
 					/* Other requests must to sign in
 					 * 
